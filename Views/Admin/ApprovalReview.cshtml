@@ -1,0 +1,63 @@
+﻿@model Projectpath.Models.ApprovalReviewViewModel
+@{
+    ViewData["Title"] = "Approval Review";
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h2 class="mb-2">@Model.Project?.Title</h2>
+                    <div class="text-muted">@Model.Project?.Company?.FullName</div>
+                </div>
+                <span class="badge bg-warning text-dark">@Model.Project?.Status</span>
+            </div>
+
+            <h4>Company Information</h4>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>Contact Person:</strong> @Model.Project?.ContactPersonName</p>
+                    <p><strong>Phone:</strong> @Model.Project?.ContactPhone</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Email:</strong> @Model.Project?.Company?.Email</p>
+                    <p><strong>Expected Duration:</strong> @Model.Project?.ExpectedDurationWeeks weeks</p>
+                </div>
+            </div>
+
+            <h4>Project Description</h4>
+            <p>@Model.Project?.Description</p>
+
+            <h4>Project Requirements</h4>
+            <p>@Model.Project?.Requirements</p>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-4">
+            <h4 class="mb-3">Admin Decision</h4>
+
+            <form asp-action="ApproveProject" method="post" class="mb-3">
+                <input type="hidden" name="id" value="@Model.Project?.Id" />
+                <textarea name="internalNotes" class="form-control mb-2" placeholder="Internal notes">@Model.InternalNotes</textarea>
+                <textarea name="messageToCompany" class="form-control mb-2" placeholder="Message to company">@Model.MessageToCompany</textarea>
+                <button class="btn btn-success w-100">Approve Project</button>
+            </form>
+
+            <form asp-action="RejectProject" method="post" class="mb-3">
+                <input type="hidden" name="id" value="@Model.Project?.Id" />
+                <textarea name="internalNotes" class="form-control mb-2" placeholder="Internal notes">@Model.InternalNotes</textarea>
+                <textarea name="messageToCompany" class="form-control mb-2" placeholder="Message to company">@Model.MessageToCompany</textarea>
+                <button class="btn btn-danger w-100">Reject Project</button>
+            </form>
+
+            <form asp-action="RequestChanges" method="post">
+                <input type="hidden" name="id" value="@Model.Project?.Id" />
+                <textarea name="internalNotes" class="form-control mb-2" placeholder="Internal notes">@Model.InternalNotes</textarea>
+                <textarea name="messageToCompany" class="form-control mb-2" placeholder="Message to company">@Model.MessageToCompany</textarea>
+                <button class="btn btn-warning w-100">Request Changes</button>
+            </form>
+        </div>
+    </div>
+</div>

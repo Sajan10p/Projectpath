@@ -1,0 +1,30 @@
+﻿@model List<Projectpath.Models.Project>
+@{
+    ViewData["Title"] = "Pending Approvals";
+}
+<div class="page-header-proto">
+    <div>
+        <h2>Pending Approvals</h2>
+        <p>Review submitted projects and take action.</p>
+    </div>
+</div>
+
+<div class="card p-4">
+    <table class="table">
+        <thead>
+            <tr><th>Project Title</th><th>Company</th><th>Submitted Date</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.Title</td>
+                    <td>@p.Company?.FullName</td>
+                    <td>@p.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td><span class="badge @(p.Status == "Under Review" ? "bg-info" : "bg-warning text-dark")">@p.Status</span></td>
+                    <td><a class="btn btn-sm btn-outline-dark" asp-action="ApprovalReview" asp-route-id="@p.Id">Review</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

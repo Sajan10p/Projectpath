@@ -1,0 +1,53 @@
+﻿@model Projectpath.Models.Project
+
+@{
+    ViewData["Title"] = "My Project";
+    var progress = ViewBag.ProgressPercent ?? 0;
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>My Project</h2>
+        <p>View detailed information about your assigned project.</p>
+    </div>
+</div>
+
+<div class="card p-4 mb-4">
+    <h3 class="mb-2">@Model.Title</h3>
+    <p class="text-muted mb-2"><strong>Company:</strong> @Model.Company?.FullName</p>
+    <p class="text-muted mb-0"><strong>Status:</strong> @Model.Status</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card p-4 h-100">
+            <h4 class="mb-3">Project Description</h4>
+            <p>@Model.Description</p>
+
+            <h4 class="mt-4 mb-3">Project Requirements</h4>
+            <p>@Model.Requirements</p>
+
+            <h4 class="mt-4 mb-3">Expected Duration</h4>
+            <p>@(Model.ExpectedDurationWeeks.HasValue ? $"{Model.ExpectedDurationWeeks} weeks" : "Not specified")</p>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-4 mb-4">
+            <h4 class="mb-3">Company Contact</h4>
+            <p><strong>Contact Person:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPersonName) ? "-" : Model.ContactPersonName)</p>
+            <p><strong>Phone:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPhone) ? "-" : Model.ContactPhone)</p>
+            <p><strong>Email:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPersonEmail) ? "-" : Model.ContactPersonEmail)</p>
+        </div>
+
+        <div class="card p-4">
+            <h4 class="mb-3">Project Progress</h4>
+            <div class="progress mb-2">
+                <div class="progress-bar" role="progressbar" style="width:@progress%">
+                    @progress%
+                </div>
+            </div>
+            <span class="badge bg-primary">In Progress</span>
+        </div>
+    </div>
+</div>

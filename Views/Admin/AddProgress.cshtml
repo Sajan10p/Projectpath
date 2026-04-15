@@ -1,0 +1,63 @@
+﻿@model Projectpath.Models.TutorProgressViewModel
+@using Projectpath.Models
+
+@{
+    ViewData["Title"] = "Update Student Progress";
+    var assignment = ViewBag.Assignment as Assignment;
+}
+
+<div class="card p-4 shadow-sm col-lg-8 mx-auto">
+    <h3 class="mb-4">Progress Update Form</h3>
+
+    <form asp-action="AddProgress" method="post">
+        <input asp-for="AssignmentId" type="hidden" />
+
+        <div class="mb-3">
+            <label class="form-label">Project Title</label>
+            <input class="form-control" value="@assignment?.Project?.Title" readonly />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ProgressPercent" class="form-label">Project Progress</label>
+            <input asp-for="ProgressPercent" type="range" min="0" max="100" class="form-range" oninput="progressValue.innerText=this.value + '%';" />
+            <div id="progressValue">@Model.ProgressPercent%</div>
+        </div>
+
+        <div class="form-check mb-3">
+            <input asp-for="IsIndividualFeedback" class="form-check-input" id="individualCheck" />
+            <label asp-for="IsIndividualFeedback" class="form-check-label">Give individual feedback</label>
+        </div>
+
+        <div class="mb-3" id="studentBox" style="display:none;">
+            <label asp-for="StudentId" class="form-label">Select Student</label>
+            <select asp-for="StudentId" class="form-select">
+                <option value="">Select Student</option>
+                @foreach (var m in assignment?.StudentGroup?.Members ?? new List<GroupMember>())
+                {
+                    <option value="@m.StudentId">@m.Student?.FullName (@m.Student?.StudentNumber)</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Note" class="form-label">Tutor Feedback</label>
+            <textarea asp-for="Note" class="form-control" rows="5" placeholder="Enter your feedback..."></textarea>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a class="btn btn-outline-secondary" asp-controller="Dashboard" asp-action="TutorDashboard">Cancel</a>
+            <button class="btn btn-dark">Submit Update</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleStudentBox() {
+            document.getElementById("studentBox").style.display =
+                document.getElementById("individualCheck").checked ? "block" : "none";
+        }
+        document.getElementById("individualCheck").addEventListener("change", toggleStudentBox);
+        toggleStudentBox();
+    </script>
+}

@@ -1,0 +1,39 @@
+﻿@model List<Projectpath.Models.Project>
+@{
+    ViewData["Title"] = "Browse Projects";
+    bool alreadyInGroup = ViewBag.AlreadyInGroup != null && (bool)ViewBag.AlreadyInGroup;
+}
+
+<div class="mb-4">
+    <h3>Available Projects</h3>
+    <p class="text-muted">Browse and select from available industry projects.</p>
+</div>
+
+<div class="row g-4">
+    @foreach (var p in Model)
+    {
+        <div class="col-md-6 col-xl-4">
+            <div class="card p-4 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h4 class="me-2">@p.Title</h4>
+                    <span class="badge bg-success">Available</span>
+                </div>
+                <div class="text-muted mb-3">@p.Company?.FullName</div>
+                <p>@p.Description</p>
+
+                @if (!alreadyInGroup && p.StudentGroups.Count < 2)
+                {
+                    <a class="btn btn-outline-dark mt-auto" asp-controller="StudentGroups" asp-action="Create" asp-route-projectId="@p.Id">View Details</a>
+                }
+                else if (alreadyInGroup)
+                {
+                    <span class="badge bg-warning text-dark mt-auto">Already in group</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary mt-auto">Group limit reached</span>
+                }
+            </div>
+        </div>
+    }
+</div>

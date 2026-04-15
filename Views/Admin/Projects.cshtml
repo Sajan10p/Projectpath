@@ -1,0 +1,48 @@
+﻿@model List<Projectpath.Models.Project>
+
+@{
+    ViewData["Title"] = "Manage Projects";
+}
+
+<div class="container mt-5">
+    <h1 class="mb-4">Project Approval</h1>
+
+    <table class="table table-bordered table-striped shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Title</th>
+                <th>Company</th>
+                <th>Groups</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th style="width:220px;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var project in Model)
+            {
+                <tr>
+                    <td>
+                        <strong>@project.Title</strong><br />
+                        <small>@project.Description</small>
+                    </td>
+                    <td>@project.Company?.FullName</td>
+                    <td>@project.StudentGroups.Count / 2</td>
+                    <td>@project.Status</td>
+                    <td>@project.CreatedAt.ToString("dd MMM yyyy")</td>
+                    <td class="d-flex gap-2">
+                        <form asp-action="ApproveProject" method="post">
+                            <input type="hidden" name="id" value="@project.Id" />
+                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                        </form>
+
+                        <form asp-action="RejectProject" method="post">
+                            <input type="hidden" name="id" value="@project.Id" />
+                            <button type="submit" class="btn btn-sm btn-warning">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

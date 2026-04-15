@@ -1,0 +1,46 @@
+﻿@model List<Projectpath.Models.StudentGroup>
+@using Projectpath.Models
+@{
+    ViewData["Title"] = "Available Groups";
+    var pendingRequests = ViewBag.PendingRequests as List<int> ?? new();
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Available Groups</h2>
+        <p>Request to join groups that still have space.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    @foreach (var group in Model)
+    {
+        <div class="col-md-6">
+            <div class="card p-4 h-100">
+                <h4>@group.GroupName</h4>
+                <p><strong>Project:</strong> @group.Project?.Title</p>
+                <p><strong>Leader:</strong> @group.Leader?.FullName (@group.Leader?.StudentNumber)</p>
+                <p><strong>Members:</strong> @group.Members.Count / 5</p>
+
+                <ul>
+                    @foreach (var member in group.Members)
+                    {
+                        <li>@member.Student?.FullName (@member.Student?.StudentNumber)</li>
+                    }
+                </ul>
+
+                @if (pendingRequests.Contains(group.Id))
+                {
+                    <span class="badge bg-warning text-dark">Request Pending</span>
+                }
+                else
+                {
+                    <form asp-action="RequestToJoin" method="post">
+                        <input type="hidden" name="studentGroupId" value="@group.Id" />
+                        <button class="btn btn-primary">Request to Join</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+</div>

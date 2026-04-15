@@ -1,0 +1,45 @@
+﻿@model List<Projectpath.Models.UserWithRoleViewModel>
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="card p-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h4>Users</h4>
+        <span>@Model.Count total users</span>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Student ID</th>
+                <th>Tutor ID</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td>@u.FullName</td>
+                    <td>@u.Email</td>
+                    <td>@u.Role</td>
+                    <td>@(string.IsNullOrWhiteSpace(u.StudentNumber) ? "-" : u.StudentNumber)</td>
+                    <td>@(string.IsNullOrWhiteSpace(u.TutorNumber) ? "-" : u.TutorNumber)</td>
+                    <td>
+                        @if (u.Email != "admin@projectpath.com")
+                        {
+                            <form asp-action="DeleteUser" method="post">
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <button class="btn btn-sm btn-outline-dark">Delete</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

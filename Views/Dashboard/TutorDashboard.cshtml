@@ -1,0 +1,37 @@
+﻿@model Projectpath.Models.TutorDashboardViewModel
+@{
+    ViewData["Title"] = "Tutor Dashboard";
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Tutor Dashboard</h2>
+        <p>Monitor assigned groups and update student progress.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4"><div class="card p-4"><h4>Assigned Students</h4><div class="kpi-value">@Model.AssignedStudentsCount</div></div></div>
+    <div class="col-md-4"><div class="card p-4"><h4>Active Projects</h4><div class="kpi-value">@Model.ActiveProjectsCount</div></div></div>
+    <div class="col-md-4"><div class="card p-4"><h4>Pending Updates</h4><div class="kpi-value">@Model.PendingUpdatesCount</div></div></div>
+</div>
+
+<div class="card p-4">
+    <h4 class="mb-3">Assigned Groups</h4>
+    <table class="table">
+        <thead>
+            <tr><th>Group</th><th>Project</th><th>Progress</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model.Assignments)
+            {
+                <tr>
+                    <td>@a.StudentGroup?.GroupName</td>
+                    <td>@a.Project?.Title</td>
+                    <td>@a.CurrentProgressPercent%</td>
+                    <td><a class="btn btn-sm btn-outline-dark" asp-controller="Tutor" asp-action="AddProgress" asp-route-assignmentId="@a.Id">Update Progress</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,44 @@
+﻿@model List<Projectpath.Models.GroupInvite>
+@{
+    ViewData["Title"] = "Invitations";
+}
+
+<div class="card p-4">
+    <h4 class="mb-3">Group Invitations</h4>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No invitations found.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>Group</th><th>Invited By</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var invite in Model)
+                {
+                    <tr>
+                        <td>@invite.StudentGroup?.GroupName</td>
+                        <td>@invite.InvitedByStudent?.FullName</td>
+                        <td>@invite.Status</td>
+                        <td>
+                            @if (invite.Status == "Pending")
+                            {
+                                <form asp-action="AcceptInvite" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" value="@invite.Id" />
+                                    <button class="btn btn-sm btn-success">Accept</button>
+                                </form>
+                                <form asp-action="RejectInvite" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" value="@invite.Id" />
+                                    <button class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

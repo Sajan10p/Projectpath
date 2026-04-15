@@ -1,0 +1,69 @@
+﻿@model List<Projectpath.Models.Assignment>
+@using Projectpath.Models
+@{
+    ViewData["Title"] = "Assignments";
+    var projects = ViewBag.Projects as List<Project>;
+    var tutors = ViewBag.Tutors as IList<ApplicationUser>;
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Project Assignments</h2>
+        <p>Assign tutors to student groups.</p>
+    </div>
+</div>
+
+<div class="card p-4">
+    @foreach (var project in projects ?? new List<Project>())
+    {
+        <div class="border rounded-4 p-4 mb-4">
+            <div class="mb-3">
+                <h5>@project.Title</h5>
+                <div class="text-muted">@project.Company?.FullName</div>
+            </div>
+
+            @foreach (var group in project.StudentGroups)
+            {
+                var currentAssignment = Model.FirstOrDefault(a => a.StudentGroupId == group.Id);
+
+                <form asp-action="SaveTutorAssignment" method="post" class="row g-3 align-items-center mb-3">
+                    <input type="hidden" name="projectId" value="@project.Id" />
+                    <input type="hidden" name="studentGroupId" value="@group.Id" />
+
+                    <div class="col-md-5">
+                        <strong>@group.GroupName</strong><br />
+                        <small class="text-muted">@string.Join(", ", group.Members.Select(m => $"{m.Student?.FullName} ({m.Student?.StudentNumber})"))</small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <select class="form-select" name="tutorId" required>
+                            <option value="">Select Tutor</option>
+                            @foreach (var tutor in tutors ?? new List<ApplicationUser>())
+                            {
+                                if (currentAssignment?.TutorId == tutor.Id)
+                                {
+                                    <option value="@tutor.Id" selected>@tutor.FullName (@tutor.TutorNumber)</option>
+                                }
+                                else
+                                {
+                                    <option value="@tutor.Id">@tutor.FullName (@tutor.TutorNumber)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <button class="btn btn-dark w-100">Save</button>
+                    </div>
+
+                    <div class="col-md-1">
+                        @if (currentAssignment != null)
+                        {
+                            <span class="badge bg-success">Done</span>
+                        }
+                    </div>
+                </form>
+            }
+        </div>
+    }
+</div>

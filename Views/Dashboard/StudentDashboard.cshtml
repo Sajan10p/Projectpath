@@ -1,0 +1,86 @@
+﻿@model Projectpath.Models.StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Student Dashboard";
+}
+
+@if (Model.Assignment == null)
+{
+    <div class="alert alert-info">You do not have an assigned project yet.</div>
+}
+else
+{
+    <div class="page-header-proto">
+        <div>
+            <h2>Student Dashboard</h2>
+            <p>Track your assigned project and tutor feedback.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4">
+                <h4>Assigned Project</h4>
+                <p class="mb-1"><strong>@Model.Assignment.Project?.Title</strong></p>
+                <div>@Model.Assignment.Project?.Company?.FullName</div>
+                <div class="mt-3">
+                    <a asp-controller="Projects" asp-action="MyProject" class="btn btn-sm btn-outline-dark">View Project Details</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4">
+                <h4>Tutor Details</h4>
+                <p class="mb-1"><strong>@Model.Assignment.Tutor?.FullName</strong></p>
+                <div>@Model.Assignment.Tutor?.Email</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4">
+                <h4>Project Progress</h4>
+                <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" style="width:@Model.Assignment.CurrentProgressPercent%">
+                        @Model.Assignment.CurrentProgressPercent%
+                    </div>
+                </div>
+                <span class="badge bg-primary">In Progress</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4 mb-4">
+        <h4 class="mb-3">Company Contact</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <p><strong>Contact Person:</strong> @(string.IsNullOrWhiteSpace(Model.Assignment.Project?.ContactPersonName) ? "-" : Model.Assignment.Project.ContactPersonName)</p>
+            </div>
+            <div class="col-md-4">
+                <p><strong>Phone:</strong> @(string.IsNullOrWhiteSpace(Model.Assignment.Project?.ContactPhone) ? "-" : Model.Assignment.Project.ContactPhone)</p>
+            </div>
+            <div class="col-md-4">
+                <p><strong>Email:</strong> @(string.IsNullOrWhiteSpace(Model.Assignment.Project?.ContactPersonEmail) ? "-" : Model.Assignment.Project.ContactPersonEmail)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4">
+        <h4 class="mb-3">Tutor Feedback</h4>
+        <table class="table">
+            <thead>
+                <tr><th>Type</th><th>Tutor</th><th>Feedback</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Updates)
+                {
+                    <tr>
+                        <td>@(u.IsIndividualFeedback ? "Individual" : "Group")</td>
+                        <td>@u.Tutor?.FullName</td>
+                        <td>@u.Note</td>
+                        <td>@u.CreatedAt.ToString("dd/MM/yyyy hh:mm tt")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

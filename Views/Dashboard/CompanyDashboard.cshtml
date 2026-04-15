@@ -1,0 +1,44 @@
+﻿@model List<Projectpath.Models.Project>
+@{
+    ViewData["Title"] = "Company Dashboard";
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Company Dashboard</h2>
+        <p>View your submitted projects and track project progress.</p>
+    </div>
+    <a asp-controller="Projects" asp-action="Create" class="btn btn-dark">Submit Project</a>
+</div>
+
+<div class="card p-4">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Progress</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                var progress = p.Assignments.Any() ? p.Assignments.Max(a => a.CurrentProgressPercent) : 0;
+
+                <tr>
+                    <td>@p.Title</td>
+                    <td><span class="badge bg-secondary">@p.Status</span></td>
+                    <td>@p.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td style="min-width:220px;">
+                        <div class="progress mb-1">
+                            <div class="progress-bar" role="progressbar" style="width:@progress%">
+                                @progress%
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

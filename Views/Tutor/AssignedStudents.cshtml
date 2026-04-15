@@ -1,0 +1,23 @@
+﻿@model List<Projectpath.Models.Assignment>
+@{
+    ViewData["Title"] = "Assigned Students";
+}
+
+<div class="card p-4">
+    <h4 class="mb-3">Assigned Groups</h4>
+    <table class="table">
+        <thead>
+            <tr><th>Project</th><th>Group</th><th>Progress</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td>@a.Project?.Title</td>
+                    <td>@a.StudentGroup?.GroupName</td>
+                    <td>@a.CurrentProgressPercent%</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

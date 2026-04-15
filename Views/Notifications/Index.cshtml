@@ -1,0 +1,49 @@
+﻿@model List<Projectpath.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Notifications</h2>
+        <p>Stay updated with approvals, assignments, invites, and system activity.</p>
+    </div>
+</div>
+
+<div class="card p-4 shadow-sm">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <h5 class="mb-2">No notifications yet</h5>
+            <p class="text-muted mb-0">You will see new updates here when activity happens in the system.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var notification in Model)
+        {
+            <div class="notification-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="notification-title">@notification.Title</div>
+                        <div class="notification-text">@notification.Message</div>
+                        <div class="notification-time">@notification.CreatedAt.ToString("dd/MM/yyyy hh:mm tt")</div>
+                    </div>
+
+                    @if (!notification.IsRead)
+                    {
+                        <span class="badge bg-primary">New</span>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(notification.LinkUrl))
+                {
+                    <div class="mt-2">
+                        <a href="@notification.LinkUrl" class="btn btn-sm btn-outline-dark">Open</a>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

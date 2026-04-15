@@ -1,0 +1,24 @@
+﻿@model List<Projectpath.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="card p-4">
+    <h4 class="mb-3">System Notifications</h4>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No notifications yet.</p>
+    }
+    else
+    {
+        @foreach (var n in Model)
+        {
+            <div class="notification-item">
+                <div class="notification-title">@n.Title</div>
+                <div class="notification-text">@n.Message</div>
+                <div class="notification-time">@n.CreatedAt.ToString("dd/MM/yyyy hh:mm tt")</div>
+            </div>
+        }
+    }
+</div>

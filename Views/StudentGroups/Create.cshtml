@@ -1,0 +1,21 @@
+﻿@model Projectpath.Models.CreateGroupViewModel
+@{
+    ViewData["Title"] = "Create Group";
+}
+
+<div class="card p-4 shadow-sm col-lg-6 mx-auto">
+    <h3 class="mb-4">Create Student Group</h3>
+
+    <form asp-action="Create" method="post">
+        <input asp-for="ProjectId" type="hidden" />
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="GroupName" class="form-label"></label>
+            <input asp-for="GroupName" class="form-control" />
+        </div>
+
+        <button class="btn btn-dark">Create Group</button>
+        <a asp-controller="Projects" asp-action="Approved" class="btn btn-outline-dark">Back</a>
+    </form>
+</div>

@@ -1,0 +1,63 @@
+﻿@model Projectpath.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Admin Dashboard</h2>
+        <p>Monitor approvals, assignments, and recent activity.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3"><div class="card p-4"><h4>Pending Projects</h4><div class="kpi-value">@Model.PendingProjects</div></div></div>
+    <div class="col-md-3"><div class="card p-4"><h4>Approved Projects</h4><div class="kpi-value">@Model.ApprovedProjects</div></div></div>
+    <div class="col-md-3"><div class="card p-4"><h4>Active Assignments</h4><div class="kpi-value">@Model.ActiveAssignments</div></div></div>
+    <div class="col-md-3"><div class="card p-4"><h4>Completed Projects</h4><div class="kpi-value">@Model.CompletedProjects</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Recent Pending Approvals</h4>
+                <a asp-controller="Admin" asp-action="PendingApprovals" class="btn btn-sm btn-outline-dark">View All</a>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr><th>Project Title</th><th>Company</th><th>Submitted Date</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.RecentPendingProjects)
+                    {
+                        <tr>
+                            <td>@p.Title</td>
+                            <td>@p.Company?.FullName</td>
+                            <td>@p.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td><span class="badge bg-warning text-dark">@p.Status</span></td>
+                            <td><a class="btn btn-sm btn-outline-dark" asp-controller="Admin" asp-action="ApprovalReview" asp-route-id="@p.Id">Review</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-4">
+            <h4 class="mb-3">Recent Activity</h4>
+            @if (Model.RecentActivities.Any())
+            {
+                @foreach (var a in Model.RecentActivities)
+                {
+                    <div class="notification-item"><div class="notification-title">@a</div></div>
+                }
+            }
+            else
+            {
+                <p class="text-muted mb-0">No recent activity.</p>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ProjectPath</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Projectpath.styles.css" asp-append-version="true" />
+</head>
+<body class="bg-light">
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand-circle">PP</div>
+                <div>
+                    <div class="sidebar-title">ProjectPath</div>
+                    <div class="sidebar-subtitle">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <span>Admin Portal</span>
+                        }
+                        else if (User.IsInRole("Tutor"))
+                        {
+
+                            <span>Tutor Portal</span>
+                        }
+                        else if (User.IsInRole("Student"))
+                        {
+
+                            <span>Student Portal</span>
+                        }
+                        else if (User.IsInRole("Company"))
+                        {
+
+                            <span>Company Portal</span>
+                        }
+                        else
+                        {
+
+                            <span>Portal</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column gap-2">
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="AdminDashboard">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="PendingApprovals">Pending Approvals</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Assignments">Assignments</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">User Management</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Notifications">Notifications</a></li>
+                    }
+                    else if (User.IsInRole("Tutor"))
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="TutorDashboard">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Tutor" asp-action="AssignedStudents">Assigned Students</a></li>
+                    }
+                    else if (User.IsInRole("Student"))
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="StudentDashboard">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Projects" asp-action="Approved">Browse Projects</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Projects" asp-action="MyProject">My Project</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="StudentGroups" asp-action="AvailableGroups">Available Groups</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="StudentGroups" asp-action="Invitations">Invitations</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Notifications" asp-action="Index">Notifications</a></li>
+                    }
+                    else if (User.IsInRole("Company"))
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="CompanyDashboard">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Projects" asp-action="MyProjects">My Projects</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Projects" asp-action="Create">Submit Project</a></li>
+                    }
+
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item mt-4">
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="btn btn-outline-dark w-100">Logout</button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="app-main">
+            <div class="app-topbar">
+                <div class="topbar-title">@ViewData["Title"]</div>
+                <div class="topbar-right">
+                    <div class="topbar-search">
+                        <input class="form-control" placeholder="Search..." />
+                    </div>
+                    <div class="fw-bold">@User.Identity?.Name</div>
+                    <div class="user-avatar-circle">
+                        @((User.Identity?.Name?.Length ?? 0) > 0 ? User.Identity!.Name![0].ToString().ToUpper() : "U")
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-warning">@TempData["Error"]</div>
+                }
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
