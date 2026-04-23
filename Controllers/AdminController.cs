@@ -30,9 +30,10 @@ namespace Projectpath.Controllers
 
         public IActionResult Index()
         {
-            return RedirectToAction("Users");
+            return RedirectToAction("PendingApprovals");
         }
 
+        // ================= USERS =================
         public async Task<IActionResult> Users()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -56,18 +57,50 @@ namespace Projectpath.Controllers
             return View(result);
         }
 
+        // ================= PROJECT LIST =================
         public async Task<IActionResult> Projects()
         {
             var projects = await _context.Projects
                 .Include(p => p.Company)
                 .Include(p => p.StudentGroups)
-                    .ThenInclude(g => g.Members)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
             return View(projects);
         }
 
+        // ================= PENDING APPROVALS =================
+        public async Task<IActionResult> PendingApprovals()
+        {
+            var projects = await _context.Projects
+                .Include(p => p.Company)
+                .Where(p => !p.IsApproved)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            return View(projects);
+        }
+
+        // ================= APPROVAL REVIEW PAGE =================
+        public async Task<IActionResult> ApprovalReview(int id)
+        {
+            var project = await _context.Projects
+                .Include(p => p.Company)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null) return NotFound();
+
+            var vm = new ApprovalReviewViewModel
+            {
+                Project = project,
+                InternalNotes = project.AdminInternalNotes,
+                MessageToCompany = project.AdminDecisionMessage
+            };
+
+            return View(vm);
+        }
+
+        // ================= APPROVE =================
         [HttpPost]
         public async Task<IActionResult> ApproveProject(int id, string? internalNotes, string? messageToCompany)
         {
@@ -84,6 +117,7 @@ namespace Projectpath.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Notification
             await _notificationService.CreateAsync(
                 project.CompanyId,
                 "Project Approved",
@@ -91,23 +125,25 @@ namespace Projectpath.Controllers
                 "/Projects/MyProjects"
             );
 
-            if (project.Company != null && !string.IsNullOrWhiteSpace(project.Company.Email))
+            // Email
+            if (!string.IsNullOrWhiteSpace(project.Company?.Email))
             {
                 try
                 {
                     await _emailService.SendEmailAsync(
                         project.Company.Email,
                         "Project Approved - ProjectPath",
-                        $"Your project '{project.Title}' has been approved."
+                        $"Your project '{project.Title}' has been approved.\n\nMessage: {messageToCompany}"
                     );
                 }
                 catch { }
             }
 
             TempData["Success"] = "Project approved successfully.";
-            return RedirectToAction("Projects");
+            return RedirectToAction("PendingApprovals");
         }
 
+        // ================= REJECT =================
         [HttpPost]
         public async Task<IActionResult> RejectProject(int id, string? internalNotes, string? messageToCompany)
         {
@@ -131,23 +167,24 @@ namespace Projectpath.Controllers
                 "/Projects/MyProjects"
             );
 
-            if (project.Company != null && !string.IsNullOrWhiteSpace(project.Company.Email))
+            if (!string.IsNullOrWhiteSpace(project.Company?.Email))
             {
                 try
                 {
                     await _emailService.SendEmailAsync(
                         project.Company.Email,
                         "Project Rejected - ProjectPath",
-                        $"Your project '{project.Title}' was rejected. Please review the admin notes."
+                        $"Your project '{project.Title}' was rejected.\n\nMessage: {messageToCompany}"
                     );
                 }
                 catch { }
             }
 
             TempData["Success"] = "Project rejected.";
-            return RedirectToAction("Projects");
+            return RedirectToAction("PendingApprovals");
         }
 
+        // ================= REQUEST CHANGES =================
         [HttpPost]
         public async Task<IActionResult> RequestChanges(int id, string? internalNotes, string? messageToCompany)
         {
@@ -166,43 +203,41 @@ namespace Projectpath.Controllers
             await _notificationService.CreateAsync(
                 project.CompanyId,
                 "Changes Requested",
-                $"Changes have been requested for '{project.Title}'.",
+                $"Changes requested for '{project.Title}'.",
                 "/Projects/MyProjects"
             );
 
-            if (project.Company != null && !string.IsNullOrWhiteSpace(project.Company.Email))
+            if (!string.IsNullOrWhiteSpace(project.Company?.Email))
             {
                 try
                 {
                     await _emailService.SendEmailAsync(
                         project.Company.Email,
                         "Changes Requested - ProjectPath",
-                        $"Changes have been requested for your project '{project.Title}'. Please log in and review admin notes."
+                        $"Changes requested for your project '{project.Title}'.\n\nMessage: {messageToCompany}"
                     );
                 }
                 catch { }
             }
 
-            TempData["Success"] = "Changes requested from company.";
-            return RedirectToAction("Projects");
+            TempData["Success"] = "Changes requested.";
+            return RedirectToAction("PendingApprovals");
         }
 
+
+        // ================= ASSIGNMENTS =================
         public async Task<IActionResult> Assignments()
         {
             ViewBag.Projects = await _context.Projects
                 .Where(p => p.IsApproved)
                 .Include(p => p.StudentGroups)
-                    .ThenInclude(g => g.Members)
-                        .ThenInclude(m => m.Student)
                 .ToListAsync();
 
             ViewBag.Tutors = await _userManager.GetUsersInRoleAsync("Tutor");
 
             var assignments = await _context.Assignments
                 .Include(a => a.Project)
-                .Include(a => a.StudentGroup)!
-                    .ThenInclude(g => g.Members)
-                    .ThenInclude(m => m.Student)
+                .Include(a => a.StudentGroup)
                 .Include(a => a.Tutor)
                 .OrderByDescending(a => a.AssignedAt)
                 .ToListAsync();
@@ -211,185 +246,138 @@ namespace Projectpath.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAssignment(AssignProjectViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return RedirectToAction("Assignments");
-
-            var exists = await _context.Assignments.AnyAsync(a => a.StudentGroupId == model.StudentGroupId);
-            if (exists)
-                return RedirectToAction("Assignments");
-
-            var assignment = new Assignment
-            {
-                ProjectId = model.ProjectId,
-                StudentGroupId = model.StudentGroupId,
-                TutorId = model.TutorId,
-                AssignedAt = DateTime.Now,
-                Status = "Assigned"
-            };
-
-            _context.Assignments.Add(assignment);
-
-            var project = await _context.Projects.FindAsync(model.ProjectId);
-            if (project != null)
-                project.Status = "Assigned";
-
-            await _context.SaveChangesAsync();
-
-            var tutor = await _userManager.FindByIdAsync(model.TutorId);
-            if (tutor != null)
-            {
-                await _notificationService.CreateAsync(
-                    tutor.Id,
-                    "New Tutor Assignment",
-                    "You have been assigned to a project group.",
-                    "/Dashboard/TutorDashboard"
-                );
-
-                if (!string.IsNullOrWhiteSpace(tutor.Email))
-                {
-                    try
-                    {
-                        await _emailService.SendEmailAsync(
-                            tutor.Email,
-                            "New Tutor Assignment - ProjectPath",
-                            "You have been assigned to a project group. Please log in to review details."
-                        );
-                    }
-                    catch { }
-                }
-            }
-
-            var groupMembers = await _context.GroupMembers
-                .Include(gm => gm.Student)
-                .Where(gm => gm.StudentGroupId == model.StudentGroupId)
-                .ToListAsync();
-
-            foreach (var gm in groupMembers)
-            {
-                await _notificationService.CreateAsync(
-                    gm.StudentId,
-                    "Tutor Assigned",
-                    "A tutor has been assigned to your group.",
-                    "/Dashboard/StudentDashboard"
-                );
-
-                if (!string.IsNullOrWhiteSpace(gm.Student?.Email))
-                {
-                    try
-                    {
-                        await _emailService.SendEmailAsync(
-                            gm.Student.Email,
-                            "Tutor Assigned - ProjectPath",
-                            "A tutor has been assigned to your group. Please log in to review details."
-                        );
-                    }
-                    catch { }
-                }
-            }
-
-            TempData["Success"] = "Assignment created successfully.";
-            return RedirectToAction("Assignments");
-        }
-
-        [HttpPost]
         public async Task<IActionResult> SaveTutorAssignment(int projectId, int studentGroupId, string tutorId)
         {
-            var existing = await _context.Assignments
+            if (projectId <= 0 || studentGroupId <= 0 || string.IsNullOrWhiteSpace(tutorId))
+            {
+                TempData["Error"] = "Invalid tutor assignment data.";
+                return RedirectToAction("Assignments");
+            }
+
+            var project = await _context.Projects.FindAsync(projectId);
+            if (project == null)
+            {
+                TempData["Error"] = "Project not found.";
+                return RedirectToAction("Assignments");
+            }
+
+            var studentGroup = await _context.StudentGroups
+                .Include(g => g.Members)
+                    .ThenInclude(m => m.Student)
+                .FirstOrDefaultAsync(g => g.Id == studentGroupId);
+
+            if (studentGroup == null)
+            {
+                TempData["Error"] = "Student group not found.";
+                return RedirectToAction("Assignments");
+            }
+
+            var tutor = await _userManager.FindByIdAsync(tutorId);
+            if (tutor == null)
+            {
+                TempData["Error"] = "Tutor not found.";
+                return RedirectToAction("Assignments");
+            }
+
+            var tutorRoles = await _userManager.GetRolesAsync(tutor);
+            if (!tutorRoles.Contains("Tutor"))
+            {
+                TempData["Error"] = "Selected user is not a tutor.";
+                return RedirectToAction("Assignments");
+            }
+
+            var existingAssignment = await _context.Assignments
                 .FirstOrDefaultAsync(a => a.ProjectId == projectId && a.StudentGroupId == studentGroupId);
 
-            if (existing == null)
+            if (existingAssignment == null)
             {
-                existing = new Assignment
+                existingAssignment = new Assignment
                 {
                     ProjectId = projectId,
                     StudentGroupId = studentGroupId,
                     TutorId = tutorId,
                     AssignedAt = DateTime.Now,
-                    Status = "Assigned"
+                    Status = "Assigned",
+                    CurrentProgressPercent = 0
                 };
-                _context.Assignments.Add(existing);
+
+                _context.Assignments.Add(existingAssignment);
             }
             else
             {
-                existing.TutorId = tutorId;
+                existingAssignment.TutorId = tutorId;
+                existingAssignment.Status = "Assigned";
             }
+
+            project.Status = "Assigned";
 
             await _context.SaveChangesAsync();
 
-            var tutor = await _userManager.FindByIdAsync(tutorId);
-            if (tutor != null)
-            {
-                await _notificationService.CreateAsync(
-                    tutor.Id,
-                    "Tutor Assignment Updated",
-                    "You have been assigned to a project group.",
-                    "/Dashboard/TutorDashboard"
-                );
+            // Notify tutor
+            await _notificationService.CreateAsync(
+                tutor.Id,
+                "New Tutor Assignment",
+                $"You have been assigned to supervise the group '{studentGroup.GroupName}' for project '{project.Title}'.",
+                "/Dashboard/TutorDashboard"
+            );
 
-                if (!string.IsNullOrWhiteSpace(tutor.Email))
+            if (!string.IsNullOrWhiteSpace(tutor.Email))
+            {
+                try
                 {
-                    try
-                    {
-                        await _emailService.SendEmailAsync(
-                            tutor.Email,
-                            "Tutor Assignment - ProjectPath",
-                            "You have been assigned to a project group. Please log in to review details."
-                        );
-                    }
-                    catch { }
+                    await _emailService.SendEmailAsync(
+                        tutor.Email,
+                        "New Tutor Assignment - ProjectPath",
+                        $"You have been assigned to supervise the group '{studentGroup.GroupName}' for project '{project.Title}'."
+                    );
                 }
+                catch { }
             }
 
-            var groupMembers = await _context.GroupMembers
-                .Include(gm => gm.Student)
-                .Where(gm => gm.StudentGroupId == studentGroupId)
-                .ToListAsync();
-
-            foreach (var gm in groupMembers)
+            // Notify students in the group
+            foreach (var member in studentGroup.Members)
             {
                 await _notificationService.CreateAsync(
-                    gm.StudentId,
+                    member.StudentId,
                     "Tutor Assigned",
-                    "A tutor has been assigned to your group.",
+                    $"Tutor {tutor.FullName} has been assigned to your group for project '{project.Title}'.",
                     "/Dashboard/StudentDashboard"
                 );
 
-                if (!string.IsNullOrWhiteSpace(gm.Student?.Email))
+                if (!string.IsNullOrWhiteSpace(member.Student?.Email))
                 {
                     try
                     {
                         await _emailService.SendEmailAsync(
-                            gm.Student.Email,
+                            member.Student.Email,
                             "Tutor Assigned - ProjectPath",
-                            "A tutor has been assigned to your group. Please log in to review details."
+                            $"Tutor {tutor.FullName} has been assigned to your group for project '{project.Title}'."
                         );
                     }
                     catch { }
                 }
             }
 
-            TempData["Success"] = "Tutor assignment saved.";
+            TempData["Success"] = "Tutor assignment saved successfully.";
             return RedirectToAction("Assignments");
         }
 
-        public async Task<IActionResult> Progress()
+
+
+        // ================= NOTIFICATIONS =================
+        public async Task<IActionResult> Notifications()
         {
-            var progress = await _context.ProgressUpdates
-                .Include(p => p.Assignment)!
-                    .ThenInclude(a => a.Project)
-                .Include(p => p.Assignment)!
-                    .ThenInclude(a => a.StudentGroup)!
-                    .ThenInclude(g => g.Members)
-                    .ThenInclude(m => m.Student)
-                .Include(p => p.Tutor)
-                .OrderByDescending(p => p.CreatedAt)
+            var user = await _userManager.GetUserAsync(User);
+
+            var notifications = await _context.Notifications
+                .Where(n => n.UserId == user!.Id)
+                .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
-            return View(progress);
+            return View(notifications);
         }
 
+        // ================= DELETE USER =================
         [HttpPost]
         public async Task<IActionResult> DeleteUser(string id)
         {
@@ -400,6 +388,7 @@ namespace Projectpath.Controllers
                 return RedirectToAction("Users");
 
             await _userManager.DeleteAsync(user);
+
             TempData["Success"] = "User deleted.";
             return RedirectToAction("Users");
         }

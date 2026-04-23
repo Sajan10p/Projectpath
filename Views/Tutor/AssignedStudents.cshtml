@@ -1,23 +1,168 @@
 ﻿@model List<Projectpath.Models.Assignment>
+
 @{
     ViewData["Title"] = "Assigned Students";
 }
 
-<div class="card p-4">
-    <h4 class="mb-3">Assigned Groups</h4>
-    <table class="table">
-        <thead>
-            <tr><th>Project</th><th>Group</th><th>Progress</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var a in Model)
-            {
-                <tr>
-                    <td>@a.Project?.Title</td>
-                    <td>@a.StudentGroup?.GroupName</td>
-                    <td>@a.CurrentProgressPercent%</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<div class="page-header-proto">
+    <div>
+        <h2>Assigned Students</h2>
+        <p>View assigned groups, group members, leader details, and company contact information.</p>
+    </div>
 </div>
+
+@if (!Model.Any())
+{
+    <div class="card p-4">
+        <div class="text-center py-5">
+            <h4 class="mb-2">No assigned groups yet</h4>
+            <p class="text-muted mb-0">Once the admin assigns you to a student group, it will appear here.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-4">
+        @foreach (var assignment in Model)
+        {
+            var group = assignment.StudentGroup;
+            var project = assignment.Project;
+            var leader = group?.Leader;
+            var members = group?.Members?.OrderByDescending(m => m.IsLeader).ThenBy(m => m.Student!.FullName).ToList()
+            ?? new List<Projectpath.Models.GroupMember>();
+
+            <div class="card p-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+                    <div>
+                        <h3 class="mb-2">@project?.Title</h3>
+                        <div class="text-muted mb-2">
+                            Group: <strong>@group?.GroupName</strong>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-secondary">
+                                Assigned: @assignment.AssignedAt.ToString("dd MMM yyyy")
+                            </span>
+
+                            <span class="badge bg-primary">
+                                Progress: @assignment.CurrentProgressPercent%
+                            </span>
+
+                            <span class="badge bg-info">
+                                Status: @assignment.Status
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="text-lg-end">
+                        <a asp-controller="Tutor"
+                           asp-action="AddProgress"
+                           asp-route-assignmentId="@assignment.Id"
+                           class="btn btn-dark-custom">
+                            Update Progress
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="section-soft h-100">
+                            <h5 class="mb-3">Company Contact</h5>
+
+                            <p class="mb-2">
+                                <strong>Contact Person:</strong>
+                                @(string.IsNullOrWhiteSpace(project?.ContactPersonName) ? "-" : project.ContactPersonName)
+                            </p>
+
+                            <p class="mb-2">
+                                <strong>Email:</strong>
+                                @(string.IsNullOrWhiteSpace(project?.ContactPersonEmail) ? "-" : project.ContactPersonEmail)
+                            </p>
+
+                            <p class="mb-0">
+                                <strong>Phone:</strong>
+                                @(string.IsNullOrWhiteSpace(project?.ContactPhone) ? "-" : project.ContactPhone)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="section-soft h-100">
+                            <h5 class="mb-3">Group Leader</h5>
+
+                            @if (leader != null)
+                            {
+                                <p class="mb-2"><strong>Name:</strong> @leader.FullName</p>
+                                <p class="mb-2"><strong>Email:</strong> @leader.Email</p>
+                                <p class="mb-0"><strong>Student ID:</strong> @(string.IsNullOrWhiteSpace(leader.StudentNumber) ? "-" : leader.StudentNumber)</p>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">No leader assigned.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="section-soft h-100">
+                            <h5 class="mb-3">Progress Overview</h5>
+
+                            <div class="progress mb-2">
+                                <div class="progress-bar" role="progressbar" style="width:@assignment.CurrentProgressPercent%">
+                                    @assignment.CurrentProgressPercent%
+                                </div>
+                            </div>
+
+                            <p class="mb-0 text-muted">
+                                Current project completion for this group.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5 class="mb-3">Group Members</h5>
+
+                    @if (members.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Student ID</th>
+                                        <th>Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var member in members)
+                                    {
+                                        <tr>
+                                            <td>@member.Student?.FullName</td>
+                                            <td>@member.Student?.Email</td>
+                                            <td>@(string.IsNullOrWhiteSpace(member.Student?.StudentNumber) ? "-" : member.Student.StudentNumber)</td>
+                                            <td>
+                                                @if (member.IsLeader)
+                                                {
+                                                    <span class="badge bg-success">Leader</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Member</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No group members found.</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

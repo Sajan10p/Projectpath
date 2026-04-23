@@ -1,58 +1,258 @@
 ﻿@{
-    ViewData["Title"] = "Home";
+    Layout = null;
+    ViewData["Title"] = "ProjectPath";
 }
 
-<div class="container mt-5">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProjectPath - Student Project Management</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="landing-body">
 
-    <!-- HERO SECTION -->
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold">ProjectPath</h1>
-        <p class="lead">Student Project Management System</p>
-        <p class="text-muted">
-            Manage projects, assign students, track progress and collaborate efficiently.
-        </p>
+    <!-- NAVBAR -->
+    <header class="landing-header">
+        <div class="landing-container landing-nav">
+            <div class="brand-wrap">
+                <div class="brand-logo">PP</div>
+                <div>
+                    <div class="brand-title">ProjectPath</div>
+                    <div class="brand-subtitle">Student Project Management Platform</div>
+                </div>
+            </div>
 
-    </div>
+            <div class="landing-nav-actions">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light-custom">Login</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-accent">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero-section">
+        <div class="landing-container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7">
+                    <div class="hero-badge">ProjectPath • Capstone Project Platform</div>
+                    <h1 class="hero-title">
+                        Manage student projects from submission to completion in one place
+                    </h1>
+                    <p class="hero-text">
+                        ProjectPath helps companies submit projects, admins review and approve them,
+                        students form teams and manage project work, and tutors track progress efficiently.
+                    </p>
+
+                    <div class="hero-actions">
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-dark-custom btn-lg-custom">Login</a>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-accent btn-lg-custom">Create Account</a>
+                    </div>
+
+                    <div class="hero-stats">
+                        <div class="hero-stat-card">
+                            <h3>4</h3>
+                            <p>User Roles</p>
+                        </div>
+                        <div class="hero-stat-card">
+                            <h3>1</h3>
+                            <p>Unified Platform</p>
+                        </div>
+                        <div class="hero-stat-card">
+                            <h3>100%</h3>
+                            <p>Web Based</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="hero-panel">
+                        <div class="hero-panel-top">
+                            <span class="dot dot-dark"></span>
+                            <span class="dot dot-accent"></span>
+                            <span class="dot dot-light"></span>
+                        </div>
+
+                        <div class="hero-panel-body">
+                            <div class="panel-card">
+                                <div class="panel-icon">A</div>
+                                <div>
+                                    <h5>Admin Approval</h5>
+                                    <p>Review, approve, assign tutors, and manage all users.</p>
+                                </div>
+                            </div>
+
+                            <div class="panel-card">
+                                <div class="panel-icon">S</div>
+                                <div>
+                                    <h5>Student Groups</h5>
+                                    <p>Create groups, invite members, and request to join teams.</p>
+                                </div>
+                            </div>
+
+                            <div class="panel-card">
+                                <div class="panel-icon">T</div>
+                                <div>
+                                    <h5>Tutor Tracking</h5>
+                                    <p>Monitor project progress and provide meaningful feedback.</p>
+                                </div>
+                            </div>
+
+                            <div class="panel-card">
+                                <div class="panel-icon">C</div>
+                                <div>
+                                    <h5>Company Projects</h5>
+                                    <p>Submit industry projects and monitor progress clearly.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- FEATURES -->
-    <div class="row text-center">
+    <section class="features-section">
+        <div class="landing-container">
+            <div class="section-heading text-center">
+                <span class="section-mini-title">Core Features</span>
+                <h2>Everything needed for project coordination</h2>
+                <p>
+                    The platform brings project submission, approval, team formation,
+                    tutor supervision, progress updates, and notifications into one secure system.
+                </p>
+            </div>
 
-        <div class="col-md-3">
-            <div class="card shadow p-3 mb-4">
-                <h4>📂 Projects</h4>
-                <p>Companies submit projects and admins approve them.</p>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">01</div>
+                        <h4>Project Submission</h4>
+                        <p>Companies can submit project ideas with full details, requirements, and contact information.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">02</div>
+                        <h4>Approval Workflow</h4>
+                        <p>Admins review submitted projects, approve valid proposals, and request changes when needed.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">03</div>
+                        <h4>Group Management</h4>
+                        <p>Students can create groups, invite team members, and manage requests using clear rules.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">04</div>
+                        <h4>Tutor Assignment</h4>
+                        <p>Admins assign tutors to project groups so each team receives proper supervision.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">05</div>
+                        <h4>Progress Tracking</h4>
+                        <p>Tutors update progress and students can view project status through their dashboard.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">06</div>
+                        <h4>Notifications</h4>
+                        <p>Users receive in-system updates and email alerts for major project activities.</p>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <div class="col-md-3">
-            <div class="card shadow p-3 mb-4">
-                <h4>👨‍🎓 Students</h4>
-                <p>Students can browse and select available projects.</p>
+    <!-- ROLE SECTION -->
+    <section class="roles-section">
+        <div class="landing-container">
+            <div class="section-heading text-center">
+                <span class="section-mini-title">Who Uses It</span>
+                <h2>Built for every role in the workflow</h2>
+                <p>
+                    ProjectPath supports all main users involved in the student project lifecycle.
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-xl-3">
+                    <div class="role-card">
+                        <div class="role-letter">A</div>
+                        <h4>Admin</h4>
+                        <p>Approves projects, manages users, assigns tutors, and monitors activity.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="role-card">
+                        <div class="role-letter">S</div>
+                        <h4>Student</h4>
+                        <p>Browses projects, manages groups, joins teams, and views project progress.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="role-card">
+                        <div class="role-letter">T</div>
+                        <h4>Tutor</h4>
+                        <p>Tracks project progress, guides students, and provides regular updates.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="role-card">
+                        <div class="role-letter">C</div>
+                        <h4>Company</h4>
+                        <p>Submits real-world projects and monitors progress through the company dashboard.</p>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <div class="col-md-3">
-            <div class="card shadow p-3 mb-4">
-                <h4>👨‍🏫 Tutors</h4>
-                <p>Tutors track progress and guide students.</p>
+    <!-- FINAL CTA -->
+    <section class="cta-section">
+        <div class="landing-container">
+            <div class="cta-box">
+                <h2>Ready to get started?</h2>
+                <p>
+                    Sign in to continue managing your projects or create a new account to join the platform.
+                </p>
+                <div class="hero-actions justify-content-center">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light-custom btn-lg-custom">Login</a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-accent btn-lg-custom">Register Now</a>
+                </div>
             </div>
         </div>
+    </section>
 
-        <div class="col-md-3">
-            <div class="card shadow p-3 mb-4">
-                <h4>📊 Dashboard</h4>
-                <p>Monitor project status and completion.</p>
+    <!-- FOOTER -->
+    <footer class="landing-footer">
+        <div class="landing-container footer-flex">
+            <div>
+                <strong>ProjectPath</strong>
+                <div class="footer-note">Smart project coordination for students, tutors, admins, and companies.</div>
+            </div>
+            <div class="footer-note">
+                © @DateTime.Now.Year ProjectPath
             </div>
         </div>
+    </footer>
 
-    </div>
-
-    <!-- INFO SECTION -->
-    <div class="mt-5 text-center">
-        <h3>Why ProjectPath?</h3>
-        <p class="text-muted">
-            Replace manual spreadsheets with a centralized system for managing academic projects efficiently.
-        </p>
-    </div>
-
-</div>
+</body>
+</html>

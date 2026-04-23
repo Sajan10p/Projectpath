@@ -28,6 +28,7 @@ namespace Projectpath.Controllers
             _notificationService = notificationService;
         }
 
+        
         public async Task<IActionResult> AssignedStudents()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -35,9 +36,12 @@ namespace Projectpath.Controllers
             var assignments = await _context.Assignments
                 .Include(a => a.Project)
                 .Include(a => a.StudentGroup)!
+                    .ThenInclude(g => g.Leader)
+                .Include(a => a.StudentGroup)!
                     .ThenInclude(g => g.Members)
-                    .ThenInclude(m => m.Student)
+                        .ThenInclude(m => m.Student)
                 .Where(a => a.TutorId == user!.Id)
+                .OrderByDescending(a => a.AssignedAt)
                 .ToListAsync();
 
             return View(assignments);
