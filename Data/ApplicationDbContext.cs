@@ -20,6 +20,7 @@ namespace Projectpath.Data
         public DbSet<Assignment> Assignments { get; set; }
         public DbSet<ProgressUpdate> ProgressUpdates { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Submission> Submissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -55,89 +56,20 @@ namespace Projectpath.Data
                 .HasForeignKey(m => m.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<GroupInvite>()
-                .HasOne(i => i.StudentGroup)
-                .WithMany(g => g.Invites)
-                .HasForeignKey(i => i.StudentGroupId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Entity<GroupInvite>()
-                .HasOne(i => i.InvitedStudent)
-                .WithMany()
-                .HasForeignKey(i => i.InvitedStudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<GroupInvite>()
-                .HasOne(i => i.InvitedByStudent)
-                .WithMany()
-                .HasForeignKey(i => i.InvitedByStudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<GroupJoinRequest>()
-                .HasOne(r => r.StudentGroup)
-                .WithMany()
-                .HasForeignKey(r => r.StudentGroupId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Entity<GroupJoinRequest>()
-                .HasOne(r => r.Student)
-                .WithMany()
-                .HasForeignKey(r => r.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<GroupLeaveRequest>()
-                .HasOne(r => r.StudentGroup)
-                .WithMany()
-                .HasForeignKey(r => r.StudentGroupId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Entity<GroupLeaveRequest>()
-                .HasOne(r => r.Student)
-                .WithMany()
-                .HasForeignKey(r => r.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             builder.Entity<Assignment>()
                 .HasOne(a => a.Project)
                 .WithMany(p => p.Assignments)
-                .HasForeignKey(a => a.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(a => a.ProjectId);
 
-            builder.Entity<Assignment>()
-                .HasOne(a => a.StudentGroup)
+            builder.Entity<Submission>()
+                .HasOne(s => s.Assignment)
                 .WithMany()
-                .HasForeignKey(a => a.StudentGroupId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasForeignKey(s => s.AssignmentId);
 
-            builder.Entity<Assignment>()
-                .HasOne(a => a.Tutor)
+            builder.Entity<Submission>()
+                .HasOne(s => s.Student)
                 .WithMany()
-                .HasForeignKey(a => a.TutorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<ProgressUpdate>()
-                .HasOne(p => p.Assignment)
-                .WithMany(a => a.ProgressUpdates)
-                .HasForeignKey(p => p.AssignmentId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Entity<ProgressUpdate>()
-                .HasOne(p => p.Tutor)
-                .WithMany()
-                .HasForeignKey(p => p.TutorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<ProgressUpdate>()
-                .HasOne(p => p.Student)
-                .WithMany()
-                .HasForeignKey(p => p.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Notification>()
-                .HasOne(n => n.User)
-                .WithMany()
-                .HasForeignKey(n => n.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(s => s.StudentId);
         }
     }
 }
