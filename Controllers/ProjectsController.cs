@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Projectpath.Data;
 using Projectpath.Models;
+using Projectpath.Services;
 
 namespace Projectpath.Controllers
 {
@@ -12,11 +13,13 @@ namespace Projectpath.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IWebHostEnvironment _environment;
 
-        public ProjectsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ProjectsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment environment)
         {
             _context = context;
             _userManager = userManager;
+            _environment = environment;
         }
 
         [Authorize(Roles = "Company")]
@@ -33,11 +36,25 @@ namespace Projectpath.Controllers
 
         [Authorize(Roles = "Company")]
         [HttpPost]
-        public async Task<IActionResult> Create(CreateProjectViewModel model)
+        public async Task<IActionResult> Create(CreateProjectViewModel model, IFormFile? projectFile)
         {
+            if (!FileUploadValidator.IsValid(projectFile, out var fileError))
+            {
+                ModelState.AddModelError("projectFile", fileError);
+            }
+
             if (!ModelState.IsValid) return View(model);
 
             var user = await _userManager.GetUserAsync(User);
+            string? projectFileName = null;
+            string? projectFilePath = null;
+
+            if (projectFile != null && projectFile.Length > 0)
+            {
+                var saved = await FileUploadValidator.SaveAsync(projectFile, _environment, "projects");
+                projectFileName = saved.FileName;
+                projectFilePath = saved.RelativePath;
+            }
 
             _context.Projects.Add(new Project
             {
@@ -53,6 +70,8 @@ namespace Projectpath.Controllers
                 ContactPhone = model.ContactPhone,
                 ContactPersonEmail = model.ContactPersonEmail,
                 ExpectedDurationWeeks = model.ExpectedDurationWeeks,
+                ProjectFileName = projectFileName,
+                ProjectFilePath = projectFilePath,
                 CreatedAt = DateTime.Now
             });
 
@@ -90,7 +109,46 @@ namespace Projectpath.Controllers
             var assignment = project.Assignments.FirstOrDefault(a => a.StudentGroupId == membership.StudentGroupId);
             ViewBag.ProgressPercent = assignment?.CurrentProgressPercent ?? 0;
             ViewBag.Assignment = assignment;
+            ViewBag.Submissions = assignment == null ? new List<Submission>() : await _context.Submissions.Where(s => s.AssignmentId == assignment.Id && s.StudentId == user!.Id).OrderByDescending(s => s.SubmittedAt).ToListAsync();
             return View(project);
+        }
+
+        [Authorize(Roles = "Student")]
+        [HttpPost]
+        public async Task<IActionResult> UploadSubmission(int assignmentId, IFormFile? submissionFile)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var assignment = await _context.Assignments.Include(a => a.StudentGroup)!.ThenInclude(g => g.Members).FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+            if (assignment == null || !assignment.StudentGroup!.Members.Any(m => m.StudentId == user!.Id)) return Forbid();
+
+            if (submissionFile == null || submissionFile.Length == 0)
+            {
+                TempData["Error"] = "Please select a file.";
+                return RedirectToAction("MyProject");
+            }
+
+            if (!FileUploadValidator.IsValid(submissionFile, out var fileError))
+            {
+                TempData["Error"] = fileError;
+                return RedirectToAction("MyProject");
+            }
+
+            var saved = await FileUploadValidator.SaveAsync(submissionFile, _environment, "submissions");
+
+            _context.Submissions.Add(new Submission
+            {
+                AssignmentId = assignmentId,
+                StudentId = user!.Id,
+                FileName = saved.FileName,
+                FilePath = saved.RelativePath,
+                Status = "Submitted",
+                SubmittedAt = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Submission uploaded successfully.";
+            return RedirectToAction("MyProject");
         }
     }
 }
