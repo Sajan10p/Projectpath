@@ -32,10 +32,14 @@ namespace Projectpath.Models
         public string? ContactPersonEmail { get; set; }
         public int? ExpectedDurationWeeks { get; set; }
 
+        public string? ProjectFileName { get; set; }
+        public string? ProjectFilePath { get; set; }
+
         public string? AdminInternalNotes { get; set; }
         public string? AdminDecisionMessage { get; set; }
 
         public ICollection<StudentGroup> StudentGroups { get; set; } = new List<StudentGroup>();
         public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
+        public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
     }
 }
