@@ -1,0 +1,49 @@
+@model IEnumerable<Projectpath.Models.ApplicationUser>
+
+@{
+    ViewData["Title"] = "Pending Registrations";
+}
+
+<h2>Pending Registrations</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No pending registrations.</div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Student/Tutor No.</th>
+                <th>Applied</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.Email</td>
+                <td>@user.UserRole</td>
+                <td>@(user.StudentNumber ?? user.TutorNumber ?? "-")</td>
+                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                <td>
+                    <form asp-action="ApproveUser" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    <form asp-action="RejectUser" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
