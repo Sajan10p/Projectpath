@@ -1,0 +1,10 @@
+@model Projectpath.Models.Project
+<h2>My Project</h2>
+@if (ViewBag.Assignment != null)
+{
+<form asp-action="UploadSubmission" method="post" enctype="multipart/form-data">
+<input type="hidden" name="assignmentId" value="@ViewBag.Assignment.Id" />
+<input type="file" name="submissionFile" />
+<button>Upload</button>
+</form>
+}
