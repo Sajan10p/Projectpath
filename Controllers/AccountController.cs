@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Projectpath.Models;
+using Projectpath.Services;
 
 namespace Projectpath.Controllers
 {
@@ -8,11 +10,13 @@ namespace Projectpath.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly EmailService _emailService;
 
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, EmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -44,7 +48,10 @@ namespace Projectpath.Controllers
                 UserRole = model.Role,
                 StudentNumber = model.Role == "Student" ? model.StudentNumber : null,
                 TutorNumber = model.Role == "Tutor" ? model.TutorNumber : null,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                IsActive = false,
+                IsRegistrationApproved = false,
+                RegistrationStatus = "Pending"
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -52,8 +59,28 @@ namespace Projectpath.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, model.Role);
-                await _signInManager.SignInAsync(user, false);
-                return RedirectToRoleDashboard(model.Role);
+
+                if (!string.IsNullOrWhiteSpace(user.Email))
+                {
+                    try
+                    {
+                        await _emailService.SendEmailAsync(user.Email, "Registration Received - ProjectPath", "Your registration application has been received. You will be able to login after the admin approves your account.");
+                    }
+                    catch { }
+                }
+
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                foreach (var admin in admins.Where(a => !string.IsNullOrWhiteSpace(a.Email)))
+                {
+                    try
+                    {
+                        await _emailService.SendEmailAsync(admin.Email!, "New Registration Pending - ProjectPath", $"{user.FullName} has applied to register as {user.UserRole}. Please login as admin to approve or reject this registration.");
+                    }
+                    catch { }
+                }
+
+                TempData["Success"] = "Registration submitted successfully. Please wait for admin approval before logging in.";
+                return RedirectToAction("Login");
             }
 
             foreach (var error in result.Errors)
@@ -72,9 +99,15 @@ namespace Projectpath.Controllers
                 return View(model);
 
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null || !user.IsActive)
+            if (user == null)
             {
                 ModelState.AddModelError("", "Invalid login attempt.");
+                return View(model);
+            }
+
+            if (!user.IsActive || !user.IsRegistrationApproved || user.RegistrationStatus != "Approved")
+            {
+                ModelState.AddModelError("", "Your account is pending admin approval. You can login after the admin approves your registration.");
                 return View(model);
             }
 

@@ -21,5 +21,12 @@ namespace Projectpath.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public bool IsActive { get; set; } = true;
+
+        public bool IsRegistrationApproved { get; set; } = false;
+
+        [StringLength(30)]
+        public string RegistrationStatus { get; set; } = "Pending";
+
+        public DateTime? RegistrationApprovedAt { get; set; }
     }
 }
