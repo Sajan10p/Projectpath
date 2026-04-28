@@ -14,6 +14,14 @@ namespace Projectpath.Models
         [Required]
         public string Requirements { get; set; } = string.Empty;
 
+        [Required]
+        [Display(Name = "Program (e.g., Bachelor of IT)")]
+        public string Program { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Project Type (e.g., Web App)")]
+        public string ProjectType { get; set; } = string.Empty;
+
         public string? ContactPersonName { get; set; }
         public string? ContactPhone { get; set; }
 
