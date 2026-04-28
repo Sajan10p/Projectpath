@@ -1,0 +1,16 @@
+@model IEnumerable<Projectpath.Models.ChatMessage>
+
+<h2>Chat</h2>
+
+<div style="border:1px solid #ccc; height:300px; overflow-y:scroll; padding:10px;">
+@foreach (var msg in Model)
+{
+    <p><strong>@msg.Sender?.FullName:</strong> @msg.MessageText</p>
+}
+</div>
+
+<form asp-action="SendMessage" method="post">
+    <input type="hidden" name="receiverId" value="@ViewBag.Receiver.Id" />
+    <input type="text" name="messageText" class="form-control" />
+    <button class="btn btn-dark mt-2">Send</button>
+</form>

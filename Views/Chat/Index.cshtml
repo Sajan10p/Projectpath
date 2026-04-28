@@ -1,0 +1,23 @@
+@model IEnumerable<Projectpath.Models.ApplicationUser>
+
+<h2>Chats</h2>
+
+<h5>Start New Chat</h5>
+<ul>
+@foreach (var user in ViewBag.AvailableUsers)
+{
+    <li>
+        <a asp-action="Conversation" asp-route-userId="@user.Id">@user.FullName</a>
+    </li>
+}
+</ul>
+
+<h5>Your Conversations</h5>
+<ul>
+@foreach (var user in Model)
+{
+    <li>
+        <a asp-action="Conversation" asp-route-userId="@user.Id">@user.FullName</a>
+    </li>
+}
+</ul>
