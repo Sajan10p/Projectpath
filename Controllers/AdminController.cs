@@ -30,11 +30,7 @@ namespace Projectpath.Controllers
 
         public async Task<IActionResult> PendingRegistrations()
         {
-            var users = await _userManager.Users
-                .Where(u => u.RegistrationStatus == "Pending" && !u.IsRegistrationApproved)
-                .OrderByDescending(u => u.CreatedAt)
-                .ToListAsync();
-
+            var users = await _userManager.Users.Where(u => u.RegistrationStatus == "Pending" && !u.IsRegistrationApproved).OrderByDescending(u => u.CreatedAt).ToListAsync();
             return View(users);
         }
 
@@ -43,18 +39,9 @@ namespace Projectpath.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
-
-            user.IsActive = true;
-            user.IsRegistrationApproved = true;
-            user.RegistrationStatus = "Approved";
-            user.RegistrationApprovedAt = DateTime.Now;
+            user.IsActive = true; user.IsRegistrationApproved = true; user.RegistrationStatus = "Approved"; user.RegistrationApprovedAt = DateTime.Now;
             await _userManager.UpdateAsync(user);
-
-            if (!string.IsNullOrWhiteSpace(user.Email))
-            {
-                try { await _emailService.SendEmailAsync(user.Email, "Registration Approved - ProjectPath", "Your account has been approved. You can now login to ProjectPath."); } catch { }
-            }
-
+            if (!string.IsNullOrWhiteSpace(user.Email)) { try { await _emailService.SendEmailAsync(user.Email, "Registration Approved - ProjectPath", "Your account has been approved. You can now login to ProjectPath."); } catch { } }
             TempData["Success"] = "User approved successfully.";
             return RedirectToAction("PendingRegistrations");
         }
@@ -64,35 +51,18 @@ namespace Projectpath.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
-
-            user.IsActive = false;
-            user.IsRegistrationApproved = false;
-            user.RegistrationStatus = "Rejected";
+            user.IsActive = false; user.IsRegistrationApproved = false; user.RegistrationStatus = "Rejected";
             await _userManager.UpdateAsync(user);
-
-            if (!string.IsNullOrWhiteSpace(user.Email))
-            {
-                try { await _emailService.SendEmailAsync(user.Email, "Registration Rejected - ProjectPath", "Your registration application has been rejected. Please contact the administrator if you believe this is incorrect."); } catch { }
-            }
-
+            if (!string.IsNullOrWhiteSpace(user.Email)) { try { await _emailService.SendEmailAsync(user.Email, "Registration Rejected - ProjectPath", "Your registration application has been rejected. Please contact the administrator if you believe this is incorrect."); } catch { } }
             TempData["Success"] = "User rejected.";
             return RedirectToAction("PendingRegistrations");
         }
 
-        public async Task<IActionResult> Users()
-        {
-            var users = await _userManager.Users.ToListAsync();
-            return View(users);
-        }
+        public async Task<IActionResult> Users() => View(await _userManager.Users.ToListAsync());
 
         public async Task<IActionResult> Submissions()
         {
-            var submissions = await _context.Submissions
-                .Include(s => s.Student)
-                .Include(s => s.Assignment).ThenInclude(a => a.Project)
-                .Include(s => s.Assignment).ThenInclude(a => a.StudentGroup)
-                .OrderByDescending(s => s.SubmittedAt)
-                .ToListAsync();
+            var submissions = await _context.Submissions.Include(s => s.Student).Include(s => s.Assignment).ThenInclude(a => a.Project).Include(s => s.Assignment).ThenInclude(a => a.StudentGroup).OrderByDescending(s => s.SubmittedAt).ToListAsync();
             return View(submissions);
         }
 
@@ -100,24 +70,26 @@ namespace Projectpath.Controllers
         {
             var submission = await _context.Submissions.FindAsync(id);
             if (submission == null || string.IsNullOrWhiteSpace(submission.FilePath)) return NotFound();
-
             var fullPath = Path.Combine(_environment.WebRootPath, submission.FilePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
             if (!System.IO.File.Exists(fullPath)) return NotFound();
-
+            submission.Status = "Viewed";
+            submission.ViewedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
             return PhysicalFile(fullPath, "application/octet-stream", submission.FileName);
         }
 
-        public async Task<IActionResult> Projects()
+        public async Task<IActionResult> DashboardStats()
         {
-            var projects = await _context.Projects.Include(p => p.Company).Include(p => p.StudentGroups).OrderByDescending(p => p.CreatedAt).ToListAsync();
-            return View(projects);
+            ViewBag.PendingRegistrations = await _userManager.Users.CountAsync(u => u.RegistrationStatus == "Pending");
+            ViewBag.TotalProjects = await _context.Projects.CountAsync();
+            ViewBag.PendingProjects = await _context.Projects.CountAsync(p => !p.IsApproved);
+            ViewBag.TotalSubmissions = await _context.Submissions.CountAsync();
+            ViewBag.UnviewedSubmissions = await _context.Submissions.CountAsync(s => s.Status == "Submitted");
+            return View();
         }
 
-        public async Task<IActionResult> PendingApprovals()
-        {
-            var projects = await _context.Projects.Include(p => p.Company).Where(p => !p.IsApproved).OrderByDescending(p => p.CreatedAt).ToListAsync();
-            return View(projects);
-        }
+        public async Task<IActionResult> Projects() => View(await _context.Projects.Include(p => p.Company).Include(p => p.StudentGroups).OrderByDescending(p => p.CreatedAt).ToListAsync());
+        public async Task<IActionResult> PendingApprovals() => View(await _context.Projects.Include(p => p.Company).Where(p => !p.IsApproved).OrderByDescending(p => p.CreatedAt).ToListAsync());
 
         public async Task<IActionResult> ApprovalReview(int id)
         {
@@ -169,8 +141,7 @@ namespace Projectpath.Controllers
         {
             ViewBag.Projects = await _context.Projects.Where(p => p.IsApproved).Include(p => p.StudentGroups).ToListAsync();
             ViewBag.Tutors = await _userManager.GetUsersInRoleAsync("Tutor");
-            var assignments = await _context.Assignments.Include(a => a.Project).Include(a => a.StudentGroup).Include(a => a.Tutor).OrderByDescending(a => a.AssignedAt).ToListAsync();
-            return View(assignments);
+            return View(await _context.Assignments.Include(a => a.Project).Include(a => a.StudentGroup).Include(a => a.Tutor).OrderByDescending(a => a.AssignedAt).ToListAsync());
         }
 
         [HttpPost]
@@ -192,8 +163,7 @@ namespace Projectpath.Controllers
         public async Task<IActionResult> Notifications()
         {
             var user = await _userManager.GetUserAsync(User);
-            var notifications = await _context.Notifications.Where(n => n.UserId == user!.Id).OrderByDescending(n => n.CreatedAt).ToListAsync();
-            return View(notifications);
+            return View(await _context.Notifications.Where(n => n.UserId == user!.Id).OrderByDescending(n => n.CreatedAt).ToListAsync());
         }
 
         [HttpPost]
