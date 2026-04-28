@@ -16,6 +16,10 @@ namespace Projectpath.Models
         public string FileName { get; set; }
         public string FilePath { get; set; }
 
+        [StringLength(30)]
+        public string Status { get; set; } = "Submitted";
+
         public DateTime SubmittedAt { get; set; } = DateTime.Now;
+        public DateTime? ViewedAt { get; set; }
     }
 }
