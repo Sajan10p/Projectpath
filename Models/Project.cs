@@ -17,6 +17,14 @@ namespace Projectpath.Models
         public string Requirements { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(100)]
+        public string Program { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(50)]
+        public string ProjectType { get; set; } = string.Empty;
+
+        [Required]
         public string CompanyId { get; set; } = string.Empty;
         public ApplicationUser? Company { get; set; }
 
