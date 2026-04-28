@@ -58,7 +58,25 @@ namespace Projectpath.Controllers
             return RedirectToAction("PendingRegistrations");
         }
 
-        public async Task<IActionResult> Users() => View(await _userManager.Users.ToListAsync());
+        public async Task<IActionResult> Users()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var result = new List<UserWithRoleViewModel>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                result.Add(new UserWithRoleViewModel
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    Email = user.Email ?? string.Empty,
+                    Role = roles.FirstOrDefault() ?? user.UserRole,
+                    StudentNumber = user.StudentNumber,
+                    TutorNumber = user.TutorNumber
+                });
+            }
+            return View(result);
+        }
 
         public async Task<IActionResult> Submissions()
         {
