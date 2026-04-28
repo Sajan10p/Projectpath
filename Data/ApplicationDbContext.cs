@@ -21,6 +21,7 @@ namespace Projectpath.Data
         public DbSet<ProgressUpdate> ProgressUpdates { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Submission> Submissions { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -70,6 +71,18 @@ namespace Projectpath.Data
                 .HasOne(s => s.Student)
                 .WithMany()
                 .HasForeignKey(s => s.StudentId);
+
+            builder.Entity<ChatMessage>()
+                .HasOne(c => c.Sender)
+                .WithMany()
+                .HasForeignKey(c => c.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ChatMessage>()
+                .HasOne(c => c.Receiver)
+                .WithMany()
+                .HasForeignKey(c => c.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
