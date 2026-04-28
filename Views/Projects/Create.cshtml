@@ -6,7 +6,7 @@
 <div class="card p-4 shadow-sm col-lg-8 mx-auto">
     <h3 class="mb-4">Submit New Project</h3>
 
-    <form asp-action="Create" method="post">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
         <div class="mb-3">
@@ -26,12 +26,18 @@
 
         <div class="mb-3">
             <label asp-for="Program" class="form-label"></label>
-            <input asp-for="Program" class="form-control" />
+            <input asp-for="Program" class="form-control" placeholder="e.g. Bachelor of IT" />
         </div>
 
         <div class="mb-3">
             <label asp-for="ProjectType" class="form-label"></label>
-            <input asp-for="ProjectType" class="form-control" />
+            <input asp-for="ProjectType" class="form-control" placeholder="e.g. Web App, Mobile App" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Project Details File</label>
+            <input type="file" name="projectFile" class="form-control" />
+            <small class="text-muted">Optional supporting file. Maximum 10MB.</small>
         </div>
 
         <div class="mb-3">
