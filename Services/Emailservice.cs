@@ -1,40 +1,58 @@
 ﻿using System.Net;
 using System.Net.Mail;
+using Microsoft.Extensions.Options;
+using Projectpath.Models;
 
 namespace Projectpath.Services
 {
     public class EmailService
     {
-        private readonly IConfiguration _config;
+        private readonly EmailSettings _settings;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration config)
+        public EmailService(IOptions<EmailSettings> settings, ILogger<EmailService> logger)
         {
-            _config = config;
+            _settings = settings.Value;
+            _logger = logger;
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            var smtpClient = new SmtpClient(_config["EmailSettings:SmtpHost"])
+            if (string.IsNullOrWhiteSpace(toEmail))
+                return;
+
+            try
             {
-                Port = int.Parse(_config["EmailSettings:SmtpPort"]),
-                Credentials = new NetworkCredential(
-                    _config["EmailSettings:SenderEmail"],
-                    _config["EmailSettings:SenderPassword"]
-                ),
-                EnableSsl = true
-            };
+                using var message = new MailMessage
+                {
+                    From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                };
 
-            var mail = new MailMessage
+                message.To.Add(toEmail);
+
+                using var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort)
+                {
+                    Credentials = new NetworkCredential(_settings.Username, _settings.Password),
+                    EnableSsl = true
+                };
+
+                await client.SendMailAsync(message);
+            }
+            catch (Exception ex)
             {
-                From = new MailAddress(_config["EmailSettings:SenderEmail"]),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
+                _logger.LogError(ex, "Email sending failed to {Email}", toEmail);
+            }
+        }
 
-            mail.To.Add(toEmail);
-
-            await smtpClient.SendMailAsync(mail);
+        public async Task SendEmailToManyAsync(IEnumerable<string?> emails, string subject, string body)
+        {
+            foreach (var email in emails.Where(e => !string.IsNullOrWhiteSpace(e)).Distinct())
+            {
+                await SendEmailAsync(email!, subject, body);
+            }
         }
     }
 }

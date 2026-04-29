@@ -38,6 +38,9 @@ namespace Projectpath
 
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
+            builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
             builder.Services.AddScoped<EmailService>();
             builder.Services.AddScoped<NotificationService>();
 
