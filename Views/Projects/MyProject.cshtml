@@ -1,89 +1,53 @@
-@model Projectpath.Models.Project
+﻿@model Projectpath.Models.Project
 
 @{
     ViewData["Title"] = "My Project";
-    var submissions = ViewBag.Submissions as List<Projectpath.Models.Submission> ?? new List<Projectpath.Models.Submission>();
+    var progress = ViewBag.ProgressPercent ?? 0;
 }
 
 <div class="page-header-proto">
     <div>
         <h2>My Project</h2>
-        <p>View your assigned project and upload your work for tutor review.</p>
+        <p>View detailed information about your assigned project.</p>
     </div>
-    <a asp-controller="Chat" asp-action="Index" class="btn btn-accent">Open Chat</a>
 </div>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-warning">@TempData["Error"]</div>
-}
-
 <div class="card p-4 mb-4">
-    <h4>@Model.Title</h4>
-    <p class="text-muted">@Model.Description</p>
-    <div class="row mt-3">
-        <div class="col-md-6"><strong>Program:</strong> @Model.Program</div>
-        <div class="col-md-6"><strong>Project Type:</strong> @Model.ProjectType</div>
+    <h3 class="mb-2">@Model.Title</h3>
+    <p class="text-muted mb-2"><strong>Company:</strong> @Model.Company?.FullName</p>
+    <p class="text-muted mb-0"><strong>Status:</strong> @Model.Status</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card p-4 h-100">
+            <h4 class="mb-3">Project Description</h4>
+            <p>@Model.Description</p>
+
+            <h4 class="mt-4 mb-3">Project Requirements</h4>
+            <p>@Model.Requirements</p>
+
+            <h4 class="mt-4 mb-3">Expected Duration</h4>
+            <p>@(Model.ExpectedDurationWeeks.HasValue ? $"{Model.ExpectedDurationWeeks} weeks" : "Not specified")</p>
+        </div>
     </div>
-    <div class="mt-3">
-        <strong>Requirements:</strong>
-        <p>@Model.Requirements</p>
-    </div>
-    <div class="mt-3">
-        <strong>Progress:</strong> @ViewBag.ProgressPercent%
-        <div class="progress mt-2">
-            <div class="progress-bar" role="progressbar" style="width:@ViewBag.ProgressPercent%">@ViewBag.ProgressPercent%</div>
+
+    <div class="col-lg-4">
+        <div class="card p-4 mb-4">
+            <h4 class="mb-3">Company Contact</h4>
+            <p><strong>Contact Person:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPersonName) ? "-" : Model.ContactPersonName)</p>
+            <p><strong>Phone:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPhone) ? "-" : Model.ContactPhone)</p>
+            <p><strong>Email:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPersonEmail) ? "-" : Model.ContactPersonEmail)</p>
+        </div>
+
+        <div class="card p-4">
+            <h4 class="mb-3">Project Progress</h4>
+            <div class="progress mb-2">
+                <div class="progress-bar" role="progressbar" style="width:@progress%">
+                    @progress%
+                </div>
+            </div>
+            <span class="badge bg-primary">In Progress</span>
         </div>
     </div>
 </div>
-
-@if (ViewBag.Assignment != null)
-{
-    <div class="card p-4 mb-4">
-        <h4>Submit Your Work</h4>
-        <p class="text-muted">Upload your latest project work. Your tutor can download and review it.</p>
-        <form asp-action="UploadSubmission" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="assignmentId" value="@ViewBag.Assignment.Id" />
-            <div class="mb-3">
-                <label class="form-label">Submission File</label>
-                <input type="file" name="submissionFile" class="form-control" required />
-                <small class="text-muted">Maximum file size: 10MB. Dangerous executable files are blocked.</small>
-            </div>
-            <button class="btn btn-dark-custom">Upload Submission</button>
-        </form>
-    </div>
-
-    <div class="card p-4">
-        <h4>Your Submissions</h4>
-        @if (!submissions.Any())
-        {
-            <div class="alert alert-info mb-0">No submissions uploaded yet.</div>
-        }
-        else
-        {
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>File</th>
-                        <th>Status</th>
-                        <th>Submitted</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var submission in submissions)
-                {
-                    <tr>
-                        <td>@submission.FileName</td>
-                        <td><span class="badge @(submission.Status == "Viewed" ? "bg-success" : "bg-warning text-dark")">@submission.Status</span></td>
-                        <td>@submission.SubmittedAt.ToString("dd MMM yyyy HH:mm")</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        }
-    </div>
-}

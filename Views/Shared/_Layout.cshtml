@@ -49,15 +49,18 @@
                     @if (User.IsInRole("Admin"))
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="AdminDashboard">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="PendingRegistrations">Pending Registrations</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="PendingApprovals">Pending Approvals</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Assignments">Assignments</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">User Management</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Notifications" asp-action="Index">Notifications</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">Chat</a></li>
                     }
                     else if (User.IsInRole("Tutor"))
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="TutorDashboard">Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Tutor" asp-action="AssignedStudents">Assigned Students</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">Chat</a></li>
                     }
                     else if (User.IsInRole("Student"))
                     {
@@ -67,12 +70,14 @@
                         <li class="nav-item"><a class="nav-link" asp-controller="StudentGroups" asp-action="AvailableGroups">My Group</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="StudentGroups" asp-action="Invitations">Invitations</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Notifications" asp-action="Index">Notifications</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">Chat</a></li>
                     }
                     else if (User.IsInRole("Company"))
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="CompanyDashboard">Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Projects" asp-action="MyProjects">My Projects</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Projects" asp-action="Create">Submit Project</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">Chat</a></li>
                     }
 
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
