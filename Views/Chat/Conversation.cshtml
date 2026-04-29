@@ -1,16 +1,89 @@
 @model IEnumerable<Projectpath.Models.ChatMessage>
 
-<h2>Chat</h2>
+@{
+    ViewData["Title"] = "Conversation";
 
-<div style="border:1px solid #ccc; height:300px; overflow-y:scroll; padding:10px;">
-@foreach (var msg in Model)
-{
-    <p><strong>@msg.Sender?.FullName:</strong> @msg.MessageText</p>
+    var receiver = ViewBag.Receiver as Projectpath.Models.ApplicationUser;
+    string currentUserId = ViewBag.CurrentUserId as string ?? "";
 }
+
+<div class="page-header-proto">
+    <div>
+        <h2>Conversation</h2>
+        <p>
+            Chat with
+            <strong>@(receiver?.FullName ?? "User")</strong>
+        </p>
+    </div>
+
+    <a asp-controller="Chat" asp-action="Index" class="btn btn-outline-dark">
+        Back to Chat
+    </a>
 </div>
 
-<form asp-action="SendMessage" method="post">
-    <input type="hidden" name="receiverId" value="@ViewBag.Receiver.Id" />
-    <input type="text" name="messageText" class="form-control" />
-    <button class="btn btn-dark mt-2">Send</button>
-</form>
+<div class="card p-4 mb-4">
+    <div style="height: 420px; overflow-y: auto;" class="p-3 bg-light rounded">
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">
+                No messages yet. Start the conversation below.
+            </div>
+        }
+        else
+        {
+            foreach (var message in Model)
+            {
+                bool isMine = message.SenderId == currentUserId;
+
+                <div class="d-flex mb-3 @(isMine ? "justify-content-end" : "justify-content-start")">
+                    <div class="p-3 rounded shadow-sm"
+                         style="max-width: 70%;
+                                        background-color:@(isMine ? "#0f172a" : "#ffffff");
+                                        color:@(isMine ? "#ffffff" : "#111827");">
+
+                        <div class="small mb-1"
+                             style="opacity:0.75;">
+                            @(message.Sender?.FullName ?? "User")
+                        </div>
+
+                        <div>
+                            @message.MessageText
+                        </div>
+
+                        <div class="small mt-2"
+                             style="opacity:0.65;">
+                            @message.SentAt.ToString("dd MMM yyyy HH:mm")
+
+                            @if (isMine && message.IsRead)
+                            {
+                                <span> • Read</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<div class="card p-4">
+    <form asp-controller="Chat" asp-action="SendMessage" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="receiverId" value="@receiver?.Id" />
+
+        <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="messageText"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Type your message..."
+                      required></textarea>
+        </div>
+
+        <button class="btn btn-dark-custom">
+            Send Message
+        </button>
+    </form>
+</div>

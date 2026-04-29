@@ -22,21 +22,45 @@ namespace Projectpath.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null) return Unauthorized();
 
-            var allowedUsers = await GetAllowedChatUsersAsync(currentUser);
-            ViewBag.AvailableUsers = allowedUsers;
+            if (currentUser == null)
+                return Unauthorized();
 
-            var userIds = await _context.ChatMessages
+            var currentUserRole = await GetPrimaryRoleAsync(currentUser);
+            var availableUsers = await GetAllowedChatUsersAsync(currentUser);
+
+            var conversationUserIds = await _context.ChatMessages
                 .Where(m => m.SenderId == currentUser.Id || m.ReceiverId == currentUser.Id)
                 .Select(m => m.SenderId == currentUser.Id ? m.ReceiverId : m.SenderId)
                 .Distinct()
                 .ToListAsync();
 
-            var conversations = allowedUsers
-                .Where(u => userIds.Contains(u.Id))
+            var conversations = availableUsers
+                .Where(u => conversationUserIds.Contains(u.Id))
                 .OrderBy(u => u.FullName)
                 .ToList();
+
+            ViewBag.AvailableUsers = availableUsers;
+            ViewBag.CurrentUserRole = currentUserRole;
+
+            if (currentUserRole == "Student")
+            {
+                ViewBag.AdminUsers = availableUsers
+                    .Where(u => u.UserRole == "Admin")
+                    .ToList();
+
+                ViewBag.GroupMembers = availableUsers
+                    .Where(u => u.UserRole == "Student")
+                    .ToList();
+
+                ViewBag.TutorUsers = availableUsers
+                    .Where(u => u.UserRole == "Tutor")
+                    .ToList();
+
+                ViewBag.CompanyUsers = availableUsers
+                    .Where(u => u.UserRole == "Company")
+                    .ToList();
+            }
 
             return View(conversations);
         }
@@ -44,18 +68,24 @@ namespace Projectpath.Controllers
         public async Task<IActionResult> Conversation(string userId)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null) return Unauthorized();
 
-            if (!await CanChatWithAsync(currentUser, userId)) return Forbid();
+            if (currentUser == null)
+                return Unauthorized();
+
+            if (!await CanChatWithAsync(currentUser, userId))
+                return Forbid();
 
             var receiver = await _userManager.FindByIdAsync(userId);
-            if (receiver == null) return NotFound();
+
+            if (receiver == null)
+                return NotFound();
 
             var messages = await _context.ChatMessages
                 .Include(m => m.Sender)
                 .Include(m => m.Receiver)
-                .Where(m => (m.SenderId == currentUser.Id && m.ReceiverId == userId) ||
-                            (m.SenderId == userId && m.ReceiverId == currentUser.Id))
+                .Where(m =>
+                    (m.SenderId == currentUser.Id && m.ReceiverId == userId) ||
+                    (m.SenderId == userId && m.ReceiverId == currentUser.Id))
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
@@ -66,17 +96,24 @@ namespace Projectpath.Controllers
             }
 
             await _context.SaveChangesAsync();
+
             ViewBag.Receiver = receiver;
+            ViewBag.CurrentUserId = currentUser.Id;
+
             return View(messages);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendMessage(string receiverId, string messageText)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null) return Unauthorized();
 
-            if (!await CanChatWithAsync(currentUser, receiverId)) return Forbid();
+            if (currentUser == null)
+                return Unauthorized();
+
+            if (!await CanChatWithAsync(currentUser, receiverId))
+                return Forbid();
 
             if (!string.IsNullOrWhiteSpace(messageText))
             {
@@ -85,8 +122,10 @@ namespace Projectpath.Controllers
                     SenderId = currentUser.Id,
                     ReceiverId = receiverId,
                     MessageText = messageText.Trim(),
-                    SentAt = DateTime.Now
+                    SentAt = DateTime.Now,
+                    IsRead = false
                 });
+
                 await _context.SaveChangesAsync();
             }
 
@@ -102,65 +141,126 @@ namespace Projectpath.Controllers
         private async Task<List<ApplicationUser>> GetAllowedChatUsersAsync(ApplicationUser currentUser)
         {
             var users = new List<ApplicationUser>();
+            var currentUserRole = await GetPrimaryRoleAsync(currentUser);
 
-            if (await _userManager.IsInRoleAsync(currentUser, "Admin"))
+            // ================= ADMIN =================
+            // Admin can chat with all approved and active users.
+            if (currentUserRole == "Admin")
             {
                 users = await _userManager.Users
-                    .Where(u => u.Id != currentUser.Id && u.IsActive && u.IsRegistrationApproved)
+                    .Where(u =>
+                        u.Id != currentUser.Id &&
+                        u.IsActive &&
+                        u.IsRegistrationApproved)
                     .OrderBy(u => u.FullName)
                     .ToListAsync();
             }
-            else if (await _userManager.IsInRoleAsync(currentUser, "Company"))
+
+            // ================= COMPANY =================
+            // Company can chat with Admin and group leaders of this company's projects.
+            else if (currentUserRole == "Company")
             {
-                users.AddRange(await _userManager.GetUsersInRoleAsync("Admin"));
-            }
-            else if (await _userManager.IsInRoleAsync(currentUser, "Tutor"))
-            {
-                var assignments = await _context.Assignments
-                    .Include(a => a.StudentGroup)!
-                        .ThenInclude(g => g.Members)
-                        .ThenInclude(m => m.Student)
-                    .Where(a => a.TutorId == currentUser.Id)
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                users.AddRange(admins);
+
+                var groupLeaders = await _context.StudentGroups
+                    .Include(g => g.Project)
+                    .Include(g => g.Leader)
+                    .Where(g =>
+                        g.Project != null &&
+                        g.Project.CompanyId == currentUser.Id &&
+                        g.Leader != null)
+                    .Select(g => g.Leader!)
                     .ToListAsync();
 
-                foreach (var assignment in assignments)
-                {
-                    users.AddRange(assignment.StudentGroup!.Members.Select(m => m.Student));
-                }
-
-                users.AddRange(await _userManager.GetUsersInRoleAsync("Admin"));
+                users.AddRange(groupLeaders);
             }
-            else if (await _userManager.IsInRoleAsync(currentUser, "Student"))
+
+            // ================= TUTOR =================
+            // Tutor can chat with Admin and assigned students only.
+            else if (currentUserRole == "Tutor")
             {
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                users.AddRange(admins);
+
+                var assignedStudents = await _context.Assignments
+                    .Include(a => a.StudentGroup)!
+                        .ThenInclude(g => g.Members)
+                            .ThenInclude(m => m.Student)
+                    .Where(a => a.TutorId == currentUser.Id)
+                    .SelectMany(a => a.StudentGroup!.Members)
+                    .Where(m => m.Student != null)
+                    .Select(m => m.Student!)
+                    .ToListAsync();
+
+                users.AddRange(assignedStudents);
+            }
+
+            // ================= STUDENT =================
+            // Student can chat with:
+            // Admin, group members, assigned tutor, project company.
+            else if (currentUserRole == "Student")
+            {
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                users.AddRange(admins);
+
                 var membership = await _context.GroupMembers
                     .Include(m => m.StudentGroup)!
                         .ThenInclude(g => g.Members)
-                        .ThenInclude(m => m.Student)
+                            .ThenInclude(m => m.Student)
                     .Include(m => m.StudentGroup)!
                         .ThenInclude(g => g.Project)!
-                        .ThenInclude(p => p.Assignments)
-                        .ThenInclude(a => a.Tutor)
+                            .ThenInclude(p => p.Company)
+                    .Include(m => m.StudentGroup)!
+                        .ThenInclude(g => g.Project)!
+                            .ThenInclude(p => p.Assignments)
+                                .ThenInclude(a => a.Tutor)
                     .FirstOrDefaultAsync(m => m.StudentId == currentUser.Id);
 
                 if (membership?.StudentGroup != null)
                 {
-                    users.AddRange(membership.StudentGroup.Members
-                        .Where(m => m.StudentId != currentUser.Id)
-                        .Select(m => m.Student));
+                    var groupMembers = membership.StudentGroup.Members
+                        .Where(m => m.StudentId != currentUser.Id && m.Student != null)
+                        .Select(m => m.Student!)
+                        .ToList();
 
-                    var tutor = membership.StudentGroup.Project?.Assignments.FirstOrDefault()?.Tutor;
-                    if (tutor != null) users.Add(tutor);
+                    users.AddRange(groupMembers);
+
+                    var assignedTutor = membership.StudentGroup.Project?
+                        .Assignments
+                        .FirstOrDefault(a => a.StudentGroupId == membership.StudentGroupId)?
+                        .Tutor;
+
+                    if (assignedTutor != null)
+                    {
+                        users.Add(assignedTutor);
+                    }
+
+                    var projectCompany = membership.StudentGroup.Project?.Company;
+
+                    if (projectCompany != null)
+                    {
+                        users.Add(projectCompany);
+                    }
                 }
-
-                users.AddRange(await _userManager.GetUsersInRoleAsync("Admin"));
             }
 
             return users
-                .Where(u => u != null && u.Id != currentUser.Id && u.IsActive && u.IsRegistrationApproved)
+                .Where(u =>
+                    u != null &&
+                    u.Id != currentUser.Id &&
+                    u.IsActive &&
+                    u.IsRegistrationApproved)
                 .GroupBy(u => u.Id)
                 .Select(g => g.First())
                 .OrderBy(u => u.FullName)
                 .ToList();
+        }
+
+        private async Task<string> GetPrimaryRoleAsync(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            return roles.FirstOrDefault() ?? user.UserRole ?? "";
         }
     }
 }

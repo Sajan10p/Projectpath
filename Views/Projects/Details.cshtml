@@ -1,0 +1,147 @@
+﻿@model Projectpath.Models.Project
+
+@{
+    ViewData["Title"] = "Project Details";
+    bool alreadyInGroup = ViewBag.AlreadyInGroup == true;
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Project Details</h2>
+        <p>Review project information before creating or joining a group.</p>
+    </div>
+
+    <a asp-controller="Projects" asp-action="Approved" class="btn btn-outline-dark">
+        Back to Browse Projects
+    </a>
+</div>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h3>@Model.Title</h3>
+            <p class="text-muted mb-1">
+                Company: @(Model.Company?.FullName ?? "-")
+            </p>
+            <p class="mb-0">
+                <strong>Status:</strong> @Model.Status
+            </p>
+        </div>
+
+        <span class="badge bg-success">
+            Available
+        </span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card p-4 mb-4">
+            <h4>Project Description</h4>
+            <p>@Model.Description</p>
+
+            <h4 class="mt-4">Requirements</h4>
+            <p>@Model.Requirements</p>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <p>
+                        <strong>Program:</strong>
+                        @(string.IsNullOrWhiteSpace(Model.Program) ? "-" : Model.Program)
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <p>
+                        <strong>Project Type:</strong>
+                        @(string.IsNullOrWhiteSpace(Model.ProjectType) ? "-" : Model.ProjectType)
+                    </p>
+                </div>
+            </div>
+
+            <h4 class="mt-4">Expected Duration</h4>
+            <p>
+                @(Model.ExpectedDurationWeeks.HasValue
+                                ? $"{Model.ExpectedDurationWeeks.Value} weeks"
+                                : "-")
+            </p>
+        </div>
+
+        <div class="card p-4 mb-4">
+            <h4>Company Project File</h4>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ProjectFilePath))
+            {
+                <p>
+                    <strong>File:</strong>
+                    @(string.IsNullOrWhiteSpace(Model.ProjectFileName)
+                                    ? "Project file"
+                                    : Model.ProjectFileName)
+            </p>
+
+                <a href="@Model.ProjectFilePath"
+                   target="_blank"
+                   class="btn btn-success">
+                    Download Company File
+                </a>
+                        }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    The company has not uploaded a project file yet.
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-4 mb-4">
+            <h4>Company Contact</h4>
+
+            <p>
+                <strong>Contact Person:</strong>
+                @(string.IsNullOrWhiteSpace(Model.ContactPersonName)
+                                ? "-"
+                                : Model.ContactPersonName)
+            </p>
+
+            <p>
+                <strong>Phone:</strong>
+                @(string.IsNullOrWhiteSpace(Model.ContactPhone)
+                                ? "-"
+                                : Model.ContactPhone)
+            </p>
+
+            <p>
+                <strong>Email:</strong>
+                @(string.IsNullOrWhiteSpace(Model.ContactPersonEmail)
+                                ? "-"
+                                : Model.ContactPersonEmail)
+            </p>
+        </div>
+
+        <div class="card p-4">
+            <h4>Choose this Project</h4>
+
+            @if (alreadyInGroup)
+            {
+                <div class="alert alert-warning">
+                    You are already in a group. You cannot create another group.
+                </div>
+            }
+            else
+            {
+                <p>
+                    Create a group for this project. You will become the group leader.
+                </p>
+
+                <a asp-controller="StudentGroups"
+                   asp-action="Create"
+                   asp-route-projectId="@Model.Id"
+                   class="btn btn-dark-custom w-100">
+                    Create Group for This Project
+                </a>
+            }
+        </div>
+    </div>
+</div>

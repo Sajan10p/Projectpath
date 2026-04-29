@@ -1,39 +1,54 @@
-﻿@model List<Projectpath.Models.Project>
+﻿@model IEnumerable<Projectpath.Models.Project>
+
 @{
     ViewData["Title"] = "Browse Projects";
-    bool alreadyInGroup = ViewBag.AlreadyInGroup != null && (bool)ViewBag.AlreadyInGroup;
 }
 
-<div class="mb-4">
-    <h3>Available Projects</h3>
-    <p class="text-muted">Browse and select from available industry projects.</p>
+<div class="page-header-proto">
+    <div>
+        <h2>Available Projects</h2>
+        <p>Browse and select from available industry projects.</p>
+    </div>
 </div>
 
-<div class="row g-4">
-    @foreach (var p in Model)
-    {
-        <div class="col-md-6 col-xl-4">
-            <div class="card p-4 shadow-sm h-100">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h4 class="me-2">@p.Title</h4>
-                    <span class="badge bg-success">Available</span>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No approved projects are available yet.
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var project in Model)
+        {
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h4>@project.Title</h4>
+                        <span class="badge bg-success">Available</span>
+                    </div>
+
+                    <p class="text-muted">
+                        @(project.Company?.FullName ?? "Company")
+                    </p>
+
+                    <p>
+                        @(project.Description != null && project.Description.Length > 140
+                                        ? project.Description.Substring(0, 140) + "..."
+                                        : project.Description)
+            </p>
+
+                    <div class="mt-auto">
+                        <a asp-controller="Projects"
+                           asp-action="Details"
+                           asp-route-id="@project.Id"
+                           class="btn btn-dark-custom w-100">
+                            View Details
+                        </a>
+                    </div>
                 </div>
-                <div class="text-muted mb-3">@p.Company?.FullName</div>
-                <p>@p.Description</p>
-
-                @if (!alreadyInGroup && p.StudentGroups.Count < 2)
-                {
-                    <a class="btn btn-outline-dark mt-auto" asp-controller="StudentGroups" asp-action="Create" asp-route-projectId="@p.Id">View Details</a>
-                }
-                else if (alreadyInGroup)
-                {
-                    <span class="badge bg-warning text-dark mt-auto">Already in group</span>
-                }
-                else
-                {
-                    <span class="badge bg-secondary mt-auto">Group limit reached</span>
-                }
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
+}

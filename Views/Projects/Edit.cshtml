@@ -1,0 +1,99 @@
+﻿@model Projectpath.Models.CreateProjectViewModel
+
+@{
+    ViewData["Title"] = "Edit Project";
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>Edit Project</h2>
+        <p>Update your project details or upload a supporting file.</p>
+    </div>
+
+    <a asp-controller="Projects" asp-action="MyProjects" class="btn btn-outline-dark">
+        Back to My Projects
+    </a>
+</div>
+
+<div class="card p-4 col-lg-8">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="id" value="@ViewBag.ProjectId" />
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Requirements" class="form-label"></label>
+            <textarea asp-for="Requirements" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Program" class="form-label"></label>
+            <input asp-for="Program" class="form-control" placeholder="e.g. Bachelor of IT" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ProjectType" class="form-label"></label>
+            <input asp-for="ProjectType" class="form-control" placeholder="e.g. Web App, Mobile App" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ContactPersonName" class="form-label"></label>
+            <input asp-for="ContactPersonName" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ContactPhone" class="form-label"></label>
+            <input asp-for="ContactPhone" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ContactPersonEmail" class="form-label"></label>
+            <input asp-for="ContactPersonEmail" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ExpectedDurationWeeks" class="form-label"></label>
+            <input asp-for="ExpectedDurationWeeks" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Upload / Replace Project File</label>
+            <input type="file" name="projectFile" class="form-control" />
+            <small class="text-muted">
+                Optional. Upload later or replace the existing file. Maximum size: 10MB.
+            </small>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(ViewBag.CurrentFileName as string))
+        {
+            <div class="alert alert-info">
+                <strong>Current file:</strong> @ViewBag.CurrentFileName
+
+                @if (!string.IsNullOrWhiteSpace(ViewBag.CurrentFilePath as string))
+                {
+                    <div class="mt-2">
+                        <a href="@ViewBag.CurrentFilePath" target="_blank" class="btn btn-success btn-sm">
+                            Download Current File
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+
+        <button class="btn btn-dark-custom">
+            Save Changes
+        </button>
+    </form>
+</div>

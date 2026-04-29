@@ -136,7 +136,7 @@ namespace Projectpath.Controllers
             return role switch
             {
                 "Admin" => RedirectToAction("AdminDashboard", "Dashboard"),
-                "Student" => RedirectToAction("StudentDashboard", "Dashboard"),
+                "Student" => RedirectToAction("Approved", "Projects"),
                 "Tutor" => RedirectToAction("TutorDashboard", "Dashboard"),
                 "Company" => RedirectToAction("CompanyDashboard", "Dashboard"),
                 _ => RedirectToAction("Index", "Home")

@@ -1,4 +1,4 @@
-﻿@model List<Projectpath.Models.Project>
+﻿@model IEnumerable<Projectpath.Models.Project>
 
 @{
     ViewData["Title"] = "My Projects";
@@ -7,15 +7,18 @@
 <div class="page-header-proto">
     <div>
         <h2>My Projects</h2>
-        <p>View your submitted projects, approval status, and admin notes.</p>
+        <p>View your submitted projects, approval status, admin notes, and uploaded files.</p>
     </div>
-    <a asp-controller="Projects" asp-action="Create" class="btn btn-dark">Submit New Project</a>
+
+    <a asp-controller="Projects" asp-action="Create" class="btn btn-dark-custom">
+        Submit New Project
+    </a>
 </div>
 
 @if (!Model.Any())
 {
-    <div class="card p-4">
-        <p class="mb-0 text-muted">You have not submitted any projects yet.</p>
+    <div class="alert alert-info">
+        You have not submitted any projects yet.
     </div>
 }
 else
@@ -23,62 +26,107 @@ else
     @foreach (var project in Model)
     {
         <div class="card p-4 mb-4">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+            <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
                     <h4 class="mb-1">@project.Title</h4>
-                    <div class="text-muted">Submitted on @project.CreatedAt.ToString("dd/MM/yyyy")</div>
+                    <p class="text-muted mb-0">
+                        Submitted on @project.CreatedAt.ToString("dd/MM/yyyy")
+                    </p>
                 </div>
 
-                <div>
-                    @if (project.Status == "Approved")
-                    {
-                        <span class="badge bg-success">@project.Status</span>
-                    }
-                    else if (project.Status == "Pending" || project.Status == "Under Review")
-                    {
-                        <span class="badge bg-warning text-dark">@project.Status</span>
-                    }
-                    else if (project.Status == "Rejected")
-                    {
-                        <span class="badge bg-danger">@project.Status</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">@project.Status</span>
-                    }
-                </div>
-            </div>
+                <span class="badge
+                            @(project.Status == "Approved" ? "bg-success" :
+                                            project.Status == "Rejected" ? "bg-danger" :
+                                            project.Status == "Assigned" ? "bg-primary" :
+                                            project.Status == "Changes Requested" ? "bg-warning text-dark" :
+                                            "bg-warning text-dark")">
+            @project.Status
+        </span>
+    </div>
 
-            <div class="row g-4">
+            <div class="row">
                 <div class="col-lg-8">
-                    <h5 class="mb-2">Project Description</h5>
+                    <h5>Project Description</h5>
                     <p>@project.Description</p>
 
-                    <h5 class="mt-4 mb-2">Requirements</h5>
+                    <h5>Requirements</h5>
                     <p>@project.Requirements</p>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p><strong>Program:</strong> @(string.IsNullOrWhiteSpace(project.Program) ? "-" : project.Program)</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Project Type:</strong> @(string.IsNullOrWhiteSpace(project.ProjectType) ? "-" : project.ProjectType)</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <h5>Project File</h5>
+
+                @if (!string.IsNullOrWhiteSpace(project.ProjectFilePath))
+                        {
+                            <p class="mb-2">
+                                <strong>Uploaded File:</strong> @project.ProjectFileName
+                            </p>
+
+                            <a href="@project.ProjectFilePath" target="_blank" class="btn btn-success btn-sm">
+                                Download File
+                            </a>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No file uploaded yet.</p>
+                        }
+                    </div>
+
+                    <div class="mt-4">
+                        <a asp-controller="Projects"
+                           asp-action="Edit"
+                           asp-route-id="@project.Id"
+                           class="btn btn-dark-custom">
+                            Edit Project
+                        </a>
+                    </div>
                 </div>
 
                 <div class="col-lg-4">
-                    <div class="border rounded-4 p-3 mb-3">
-                        <h5 class="mb-3">Contact Details</h5>
-                        <p class="mb-2"><strong>Contact Person:</strong> @(string.IsNullOrWhiteSpace(project.ContactPersonName) ? "-" : project.ContactPersonName)</p>
-                        <p class="mb-2"><strong>Email:</strong> @(string.IsNullOrWhiteSpace(project.ContactPersonEmail) ? "-" : project.ContactPersonEmail)</p>
-                        <p class="mb-2"><strong>Phone:</strong> @(string.IsNullOrWhiteSpace(project.ContactPhone) ? "-" : project.ContactPhone)</p>
-                        <p class="mb-0"><strong>Expected Duration:</strong> @(project.ExpectedDurationWeeks.HasValue ? $"{project.ExpectedDurationWeeks} weeks" : "-")</p>
+                    <div class="card p-3 mb-3">
+                        <h5>Contact Details</h5>
+
+                        <p>
+                            <strong>Contact Person:</strong>
+                            @(string.IsNullOrWhiteSpace(project.ContactPersonName) ? "-" : project.ContactPersonName)
+                        </p>
+
+                        <p>
+                            <strong>Email:</strong>
+                            @(string.IsNullOrWhiteSpace(project.ContactPersonEmail) ? "-" : project.ContactPersonEmail)
+                        </p>
+
+                        <p>
+                            <strong>Phone:</strong>
+                            @(string.IsNullOrWhiteSpace(project.ContactPhone) ? "-" : project.ContactPhone)
+                        </p>
+
+                        <p>
+                            <strong>Expected Duration:</strong>
+                            @(project.ExpectedDurationWeeks.HasValue ? $"{project.ExpectedDurationWeeks} weeks" : "-")
+                        </p>
                     </div>
 
-                    <div class="border rounded-4 p-3">
-                        <h5 class="mb-3">Admin Notes</h5>
+                    <div class="card p-3">
+                        <h5>Admin Notes</h5>
 
-                        <p class="mb-2">
-                            <strong>Internal Notes:</strong><br />
-                            @(string.IsNullOrWhiteSpace(project.AdminInternalNotes) ? "No notes yet." : project.AdminInternalNotes)
+                        <p class="mb-1">
+                            <strong>Internal Notes:</strong>
                         </p>
+                        <p>@(string.IsNullOrWhiteSpace(project.AdminInternalNotes) ? "No notes yet." : project.AdminInternalNotes)</p>
 
-                        <p class="mb-0">
-                            <strong>Message from Admin:</strong><br />
-                            @(string.IsNullOrWhiteSpace(project.AdminDecisionMessage) ? "No message yet." : project.AdminDecisionMessage)
+                        <p class="mb-1">
+                            <strong>Message from Admin:</strong>
                         </p>
+                        <p>@(string.IsNullOrWhiteSpace(project.AdminDecisionMessage) ? "No message yet." : project.AdminDecisionMessage)</p>
                     </div>
                 </div>
             </div>
