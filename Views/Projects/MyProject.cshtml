@@ -1,10 +1,89 @@
 @model Projectpath.Models.Project
-<h2>My Project</h2>
+
+@{
+    ViewData["Title"] = "My Project";
+    var submissions = ViewBag.Submissions as List<Projectpath.Models.Submission> ?? new List<Projectpath.Models.Submission>();
+}
+
+<div class="page-header-proto">
+    <div>
+        <h2>My Project</h2>
+        <p>View your assigned project and upload your work for tutor review.</p>
+    </div>
+    <a asp-controller="Chat" asp-action="Index" class="btn btn-accent">Open Chat</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-warning">@TempData["Error"]</div>
+}
+
+<div class="card p-4 mb-4">
+    <h4>@Model.Title</h4>
+    <p class="text-muted">@Model.Description</p>
+    <div class="row mt-3">
+        <div class="col-md-6"><strong>Program:</strong> @Model.Program</div>
+        <div class="col-md-6"><strong>Project Type:</strong> @Model.ProjectType</div>
+    </div>
+    <div class="mt-3">
+        <strong>Requirements:</strong>
+        <p>@Model.Requirements</p>
+    </div>
+    <div class="mt-3">
+        <strong>Progress:</strong> @ViewBag.ProgressPercent%
+        <div class="progress mt-2">
+            <div class="progress-bar" role="progressbar" style="width:@ViewBag.ProgressPercent%">@ViewBag.ProgressPercent%</div>
+        </div>
+    </div>
+</div>
+
 @if (ViewBag.Assignment != null)
 {
-<form asp-action="UploadSubmission" method="post" enctype="multipart/form-data">
-<input type="hidden" name="assignmentId" value="@ViewBag.Assignment.Id" />
-<input type="file" name="submissionFile" />
-<button>Upload</button>
-</form>
+    <div class="card p-4 mb-4">
+        <h4>Submit Your Work</h4>
+        <p class="text-muted">Upload your latest project work. Your tutor can download and review it.</p>
+        <form asp-action="UploadSubmission" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="assignmentId" value="@ViewBag.Assignment.Id" />
+            <div class="mb-3">
+                <label class="form-label">Submission File</label>
+                <input type="file" name="submissionFile" class="form-control" required />
+                <small class="text-muted">Maximum file size: 10MB. Dangerous executable files are blocked.</small>
+            </div>
+            <button class="btn btn-dark-custom">Upload Submission</button>
+        </form>
+    </div>
+
+    <div class="card p-4">
+        <h4>Your Submissions</h4>
+        @if (!submissions.Any())
+        {
+            <div class="alert alert-info mb-0">No submissions uploaded yet.</div>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var submission in submissions)
+                {
+                    <tr>
+                        <td>@submission.FileName</td>
+                        <td><span class="badge @(submission.Status == "Viewed" ? "bg-success" : "bg-warning text-dark")">@submission.Status</span></td>
+                        <td>@submission.SubmittedAt.ToString("dd MMM yyyy HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
 }
