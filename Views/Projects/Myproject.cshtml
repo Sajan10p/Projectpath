@@ -2,7 +2,10 @@
 
 @{
     ViewData["Title"] = "My Project";
+
     var progress = ViewBag.ProgressPercent ?? 0;
+    var submissions = ViewBag.Submissions as List<Projectpath.Models.Submission>
+                      ?? new List<Projectpath.Models.Submission>();
 }
 
 <div class="page-header-proto">
@@ -10,44 +13,206 @@
         <h2>My Project</h2>
         <p>View detailed information about your assigned project.</p>
     </div>
+
+    <a asp-controller="Chat" asp-action="Index" class="btn btn-dark-custom">
+        Open Chat
+    </a>
 </div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-warning">@TempData["Error"]</div>
+}
 
 <div class="card p-4 mb-4">
-    <h3 class="mb-2">@Model.Title</h3>
-    <p class="text-muted mb-2"><strong>Company:</strong> @Model.Company?.FullName</p>
-    <p class="text-muted mb-0"><strong>Status:</strong> @Model.Status</p>
+    <h3>@Model.Title</h3>
+
+    <p>
+        <strong>Company:</strong>
+        @(Model.Company?.FullName ?? "-")
+    </p>
+
+    <p>
+        <strong>Status:</strong>
+        @Model.Status
+    </p>
+
+    <p>
+        <strong>Program:</strong>
+        @(string.IsNullOrWhiteSpace(Model.Program) ? "-" : Model.Program)
+    </p>
+
+    <p>
+        <strong>Project Type:</strong>
+        @(string.IsNullOrWhiteSpace(Model.ProjectType) ? "-" : Model.ProjectType)
+    </p>
 </div>
 
-<div class="row g-4 mb-4">
+<div class="row">
     <div class="col-lg-8">
-        <div class="card p-4 h-100">
-            <h4 class="mb-3">Project Description</h4>
+        <div class="card p-4 mb-4">
+            <h4>Project Description</h4>
             <p>@Model.Description</p>
 
-            <h4 class="mt-4 mb-3">Project Requirements</h4>
+            <h4 class="mt-4">Project Requirements</h4>
             <p>@Model.Requirements</p>
 
-            <h4 class="mt-4 mb-3">Expected Duration</h4>
-            <p>@(Model.ExpectedDurationWeeks.HasValue ? $"{Model.ExpectedDurationWeeks} weeks" : "Not specified")</p>
+            <h4 class="mt-4">Expected Duration</h4>
+            <p>
+                @(Model.ExpectedDurationWeeks.HasValue
+                                ? $"{Model.ExpectedDurationWeeks.Value} weeks"
+                                : "-")
+            </p>
         </div>
+
+        <div class="card p-4 mb-4">
+            <h4>Company Project File</h4>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ProjectFilePath))
+            {
+                <p>
+                    <strong>File:</strong>
+                    @(string.IsNullOrWhiteSpace(Model.ProjectFileName)
+                                    ? "Project file"
+                                    : Model.ProjectFileName)
+            </p>
+
+                <a href="@Model.ProjectFilePath"
+                   target="_blank"
+                   class="btn btn-success">
+                    Download Company File
+                </a>
+                        }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    The company has not uploaded a project file yet.
+                </div>
+            }
+        </div>
+
+        @if (ViewBag.Assignment != null)
+        {
+            <div class="card p-4 mb-4">
+                <h4>Submit Your Work</h4>
+                <p class="text-muted">
+                    Upload your completed work or progress file for tutor review.
+                </p>
+
+                <form asp-controller="Projects"
+                      asp-action="UploadSubmission"
+                      method="post"
+                      enctype="multipart/form-data">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="assignmentId"
+                           value="@ViewBag.Assignment.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Submission File</label>
+                        <input type="file"
+                               name="submissionFile"
+                               class="form-control"
+                               required />
+                        <small class="text-muted">
+                            Maximum file size: 10MB. Dangerous executable files are blocked.
+                        </small>
+                    </div>
+
+                    <button class="btn btn-dark-custom">
+                        Upload Submission
+                    </button>
+                </form>
+            </div>
+
+            <div class="card p-4 mb-4">
+                <h4>Your Submissions</h4>
+
+                @if (!submissions.Any())
+                {
+                    <div class="alert alert-info mb-0">
+                        You have not uploaded any submissions yet.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>File</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var submission in submissions)
+                                {
+                                    <tr>
+                                        <td>@submission.FileName</td>
+                                        <td>
+                                            <span class="badge @(submission.Status == "Viewed" ? "bg-success" : "bg-warning text-dark")">
+                                                @submission.Status
+                                            </span>
+                                        </td>
+                                        <td>@submission.SubmittedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
     </div>
 
     <div class="col-lg-4">
         <div class="card p-4 mb-4">
-            <h4 class="mb-3">Company Contact</h4>
-            <p><strong>Contact Person:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPersonName) ? "-" : Model.ContactPersonName)</p>
-            <p><strong>Phone:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPhone) ? "-" : Model.ContactPhone)</p>
-            <p><strong>Email:</strong> @(string.IsNullOrWhiteSpace(Model.ContactPersonEmail) ? "-" : Model.ContactPersonEmail)</p>
+            <h4>Company Contact</h4>
+
+            <p>
+                <strong>Contact Person:</strong>
+                @(string.IsNullOrWhiteSpace(Model.ContactPersonName)
+                                ? "-"
+                                : Model.ContactPersonName)
+            </p>
+
+            <p>
+                <strong>Phone:</strong>
+                @(string.IsNullOrWhiteSpace(Model.ContactPhone)
+                                ? "-"
+                                : Model.ContactPhone)
+            </p>
+
+            <p>
+                <strong>Email:</strong>
+                @(string.IsNullOrWhiteSpace(Model.ContactPersonEmail)
+                                ? "-"
+                                : Model.ContactPersonEmail)
+            </p>
         </div>
 
-        <div class="card p-4">
-            <h4 class="mb-3">Project Progress</h4>
-            <div class="progress mb-2">
-                <div class="progress-bar" role="progressbar" style="width:@progress%">
+        <div class="card p-4 mb-4">
+            <h4>Project Progress</h4>
+
+            <div class="progress mb-3">
+                <div class="progress-bar"
+                     role="progressbar"
+                     style="width:@progress%">
                     @progress%
                 </div>
             </div>
-            <span class="badge bg-primary">In Progress</span>
+
+            <span class="badge bg-info text-dark">
+                In Progress
+            </span>
         </div>
     </div>
 </div>

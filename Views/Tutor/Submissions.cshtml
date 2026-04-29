@@ -4,39 +4,86 @@
     ViewData["Title"] = "Student Submissions";
 }
 
-<h2>Student Submissions</h2>
+<div class="page-header-proto">
+    <div>
+        <h2>Student Submissions</h2>
+        <p>View and download submissions from students assigned to you.</p>
+    </div>
+</div>
 
 @if (!Model.Any())
 {
-    <p>No submissions yet.</p>
+    <div class="alert alert-info">
+        No student submissions have been uploaded yet.
+    </div>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Student</th>
-                <th>Project</th>
-                <th>File</th>
-                <th>Status</th>
-                <th>Submitted</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var s in Model)
-        {
-            <tr>
-                <td>@s.Student?.FullName</td>
-                <td>@s.Assignment?.Project?.Title</td>
-                <td>@s.FileName</td>
-                <td>@s.Status</td>
-                <td>@s.SubmittedAt</td>
-                <td>
-                    <a asp-action="DownloadSubmission" asp-route-id="@s.Id" class="btn btn-dark btn-sm">Download</a>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    <div class="card p-4">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Project</th>
+                        <th>Group</th>
+                        <th>File</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var submission in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@(submission.Student?.FullName ?? "-")</strong>
+                                <div class="text-muted small">
+                                    @(submission.Student?.Email ?? "")
+                                </div>
+                            </td>
+
+                            <td>
+                                @(submission.Assignment?.Project?.Title ?? "-")
+                            </td>
+
+                            <td>
+                                @(submission.Assignment?.StudentGroup?.GroupName ?? "-")
+                            </td>
+
+                            <td>
+                                @submission.FileName
+                            </td>
+
+                            <td>
+                                @if (submission.Status == "Viewed")
+                                {
+                                    <span class="badge bg-success">Viewed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Submitted</span>
+                                }
+                            </td>
+
+                            <td>
+                                @submission.SubmittedAt.ToString("dd MMM yyyy HH:mm")
+                            </td>
+
+                            <td>
+                                <a asp-controller="Tutor"
+                                   asp-action="DownloadSubmission"
+                                   asp-route-id="@submission.Id"
+                                   class="btn btn-dark btn-sm">
+                                    Download
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }
